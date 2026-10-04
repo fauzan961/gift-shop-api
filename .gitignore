@@ -1,0 +1,13 @@
+/.bundle
+/config/master.key
+/config/credentials/*.key
+/log/*
+!/log/.keep
+/storage/*
+!/storage/.keep
+/tmp/*
+!/tmp/.keep
+/vendor/bundle
+/public/assets
+/coverage
+.DS_Store
