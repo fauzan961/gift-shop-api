@@ -11,3 +11,6 @@
 /public/assets
 /coverage
 .DS_Store
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
