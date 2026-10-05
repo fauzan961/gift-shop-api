@@ -9,14 +9,15 @@ is being built step by step to replace it.
 | Tool       | Version                                 |
 |------------|-----------------------------------------|
 | Ruby       | 3.3.6 (see `.ruby-version`)             |
-| PostgreSQL | 14+                                     |
+| PostgreSQL | 18                                      |
 | libvips    | any recent (image variants for uploads) |
 
 On macOS with Homebrew:
 
 ```bash
-brew install postgresql@14 vips
-brew services start postgresql@14
+brew install postgresql@18 vips
+brew link postgresql@18
+brew services start postgresql@18
 ```
 
 ## Setup
@@ -59,8 +60,9 @@ bin/rails test   # test suite
 bin/ci           # everything CI runs: RuboCop, bundler-audit, Brakeman, tests, seeds
 ```
 
-GitHub Actions runs the same checks on every push to `main` and on pull
-requests, against a PostgreSQL service container.
+GitHub Actions can run the same checks against a PostgreSQL service container.
+Automatic runs on push and pull requests are paused for now. Start a run by
+hand from the repository's Actions tab.
 
 ## Deployment
 

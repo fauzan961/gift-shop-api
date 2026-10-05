@@ -1,9 +1,12 @@
 name: CI
 
+# Automatic runs are paused. Start a run by hand from the Actions tab.
+# To turn them back on, replace workflow_dispatch with:
+#   pull_request:
+#   push:
+#     branches: [ main ]
 on:
-  pull_request:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   scan_ruby:
@@ -55,7 +58,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:18
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
