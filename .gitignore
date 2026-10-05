@@ -1,16 +1,27 @@
+# Ignore bundler config and locally installed gems.
 /.bundle
-/config/master.key
+/vendor/bundle
+
+# Ignore key files for decrypting credentials (master.key and per-environment keys).
+/config/*.key
 /config/credentials/*.key
+
+# Ignore all environment files.
+/.env*
+
+# Ignore all logfiles and tempfiles.
 /log/*
 !/log/.keep
-/storage/*
-!/storage/.keep
 /tmp/*
 !/tmp/.keep
-/vendor/bundle
+
+# Ignore uploaded files and local databases.
+/storage/*
+!/storage/.keep
+
+# Ignore build and test output.
 /public/assets
 /coverage
-.DS_Store
-# Ignore key files for decrypting credentials and more.
-/config/*.key
 
+# Ignore OS files.
+.DS_Store
