@@ -1,0 +1,21 @@
+flowers:
+  name_en: Flowers
+  name_ar: زهور
+  slug: flowers
+  emoji: 💐
+  tagline_en: Hand-tied blooms, cut fresh daily
+  tagline_ar: باقات مصنوعة يدويًا، تُقطف طازجة يوميًا
+  image: /assets/images/flowers.jpg
+  theme: tint-blush
+  position: 1
+
+cakes:
+  name_en: Cakes
+  slug: cakes
+  position: 2
+
+hidden:
+  name_en: Hidden Category
+  slug: hidden-category
+  position: 0
+  active: false

@@ -7,4 +7,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  scope path: "api/v1" do
+    resources :categories, only: :index
+  end
 end
