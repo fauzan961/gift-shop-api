@@ -10,5 +10,6 @@ Rails.application.routes.draw do
 
   scope path: "api/v1" do
     resources :categories, only: :index
+    resources :occasions, only: :index
   end
 end

@@ -1,0 +1,28 @@
+valentines_day:
+  name_en: Valentine's Day
+  name_ar: عيد الحب
+  slug: valentines-day
+  emoji: 💕
+  tagline_en: Say it with roses
+  tagline_ar: عبّر بالورود
+  image: /assets/images/flowers.jpg
+  occurs_on: <%= Date.current + 30 %>
+  featured: true
+  position: 1
+
+birthday:
+  name_en: Birthday
+  slug: birthday
+  position: 2
+
+graduation:
+  name_en: Graduation
+  slug: graduation
+  occurs_on: <%= Date.current - 10 %>
+  position: 3
+
+hidden:
+  name_en: Hidden Occasion
+  slug: hidden-occasion
+  position: 0
+  active: false
