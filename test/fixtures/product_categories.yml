@@ -1,0 +1,23 @@
+gift_set_flowers:
+  product: gift_set
+  category: flowers
+  primary_category: true
+
+gift_set_cakes:
+  product: gift_set
+  category: cakes
+
+teddy_bear_cakes:
+  product: teddy_bear
+  category: cakes
+  primary_category: true
+
+chocolate_box_cakes:
+  product: chocolate_box
+  category: cakes
+  primary_category: true
+
+hidden_product_flowers:
+  product: hidden_product
+  category: flowers
+  primary_category: true

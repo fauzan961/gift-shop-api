@@ -50,6 +50,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index returns an empty list when there are no categories" do
+    ProductCategory.delete_all
     Category.delete_all
 
     get categories_url

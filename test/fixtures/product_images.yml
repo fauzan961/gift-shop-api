@@ -1,0 +1,16 @@
+# The gift set's images are listed with the higher position first, so tests
+# can prove galleries are sorted by position rather than by insertion order.
+gift_set_flowers_image:
+  product: gift_set
+  image: /assets/images/flowers.jpg
+  position: 2
+
+gift_set_pendant_image:
+  product: gift_set
+  image: /assets/images/pendant.webp
+  position: 1
+
+teddy_bear_image:
+  product: teddy_bear
+  image: /assets/images/toy.webp
+  position: 0

@@ -1,0 +1,33 @@
+gift_set:
+  name_en: Forever Yours Gift Set
+  name_ar: طقم هدايا للأبد لك
+  slug: forever-yours-gift-set
+  description_en: A rose gold heart pendant, red roses and Belgian chocolates in one box.
+  description_ar: قلادة قلب من الذهب الوردي وورود حمراء وشوكولاتة بلجيكية في علبة واحدة.
+  price: 48.000
+  gender: women
+  age_group: 18+
+  stock: 6
+  rating_average: 4.6
+  reviews_count: 8
+
+teddy_bear:
+  name_en: Cuddly Teddy Bear Classic
+  slug: cuddly-teddy-bear-classic
+  price: 9.000
+  age_group: 0-6
+  stock: 0
+
+chocolate_box:
+  name_en: Belgian Chocolate Box
+  slug: belgian-chocolate-box
+  price: 12.500
+  stock: 20
+
+hidden_product:
+  name_en: Hidden Product
+  slug: hidden-product
+  price: 5.000
+  age_group: 18+
+  stock: 3
+  active: false

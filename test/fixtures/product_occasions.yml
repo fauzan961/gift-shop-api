@@ -1,0 +1,11 @@
+gift_set_valentines_day:
+  product: gift_set
+  occasion: valentines_day
+
+gift_set_birthday:
+  product: gift_set
+  occasion: birthday
+
+teddy_bear_birthday:
+  product: teddy_bear
+  occasion: birthday

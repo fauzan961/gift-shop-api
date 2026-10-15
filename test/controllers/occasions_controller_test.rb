@@ -72,6 +72,7 @@ class OccasionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index returns an empty list when there are no occasions" do
+    ProductOccasion.delete_all
     Occasion.delete_all
 
     get occasions_url
