@@ -1,6 +1,9 @@
 class Category < ApplicationRecord
   SLUG_FORMAT = /\A[a-z0-9]+(-[a-z0-9]+)*\z/
 
+  has_many :product_categories, dependent: :restrict_with_error
+  has_many :products, through: :product_categories
+
   normalizes :name_en, :name_ar, :tagline_en, :tagline_ar, with: ->(value) { value.strip.presence }
   normalizes :slug, with: ->(value) { value.strip.downcase }
 
