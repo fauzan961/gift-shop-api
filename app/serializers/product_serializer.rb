@@ -18,4 +18,16 @@ class ProductSerializer
       inStock: product.in_stock?
     }
   end
+
+  def serialize_details(product)
+    serialize(product).merge(
+      descriptionEn: product.description_en,
+      descriptionAr: product.description_ar,
+      stock: product.stock,
+      images: product.product_images.map(&:image),
+      occasions: product.occasions.active.ordered.map do |occasion|
+        { slug: occasion.slug, nameEn: occasion.name_en, nameAr: occasion.name_ar }
+      end
+    )
+  end
 end

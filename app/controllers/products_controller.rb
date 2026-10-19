@@ -47,6 +47,14 @@ class ProductsController < ApplicationController
     }
   end
 
+  def show
+    product = Product.active
+                     .includes(:primary_category, :product_images)
+                     .find_by!(slug: params[:slug].to_s.downcase)
+
+    render json: { data: ProductSerializer.new.serialize_details(product) }
+  end
+
   private
     def filter_by_categories(scope)
       return scope if category_slugs.empty?

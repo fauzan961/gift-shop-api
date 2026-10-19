@@ -510,6 +510,83 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body.dig("meta", "totalCount")
   end
 
+  # ---------- Details ----------
+
+  test "show responds with JSON in a data key" do
+    get product_url("forever-yours-gift-set")
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal [ "data" ], response.parsed_body.keys
+  end
+
+  test "show returns every details field for a product" do
+    get product_url("forever-yours-gift-set")
+
+    assert_equal(
+      {
+        "slug" => "forever-yours-gift-set",
+        "nameEn" => "Forever Yours Gift Set",
+        "nameAr" => "طقم هدايا للأبد لك",
+        "category" => { "slug" => "flowers", "nameEn" => "Flowers", "nameAr" => "زهور" },
+        "price" => 48.0,
+        "ratingAverage" => 4.6,
+        "reviewsCount" => 8,
+        "image" => "/assets/images/pendant.webp",
+        "inStock" => true,
+        "descriptionEn" => "A rose gold heart pendant, red roses and Belgian chocolates in one box.",
+        "descriptionAr" => "قلادة قلب من الذهب الوردي وورود حمراء وشوكولاتة بلجيكية في علبة واحدة.",
+        "stock" => 6,
+        "images" => [ "/assets/images/pendant.webp", "/assets/images/flowers.jpg" ],
+        "occasions" => [
+          { "slug" => "valentines-day", "nameEn" => "Valentine's Day", "nameAr" => "عيد الحب" },
+          { "slug" => "birthday", "nameEn" => "Birthday", "nameAr" => nil }
+        ]
+      },
+      response.parsed_body["data"]
+    )
+  end
+
+  test "show returns empty lists for a product without images or occasions" do
+    get product_url("belgian-chocolate-box")
+
+    details = response.parsed_body["data"]
+    assert_equal [], details["images"]
+    assert_equal [], details["occasions"]
+    assert_nil details["descriptionEn"]
+  end
+
+  test "show leaves inactive occasions out of the chips" do
+    ProductOccasion.create!(product: products(:gift_set), occasion: occasions(:hidden))
+
+    get product_url("forever-yours-gift-set")
+
+    chips = response.parsed_body.dig("data", "occasions").map { |occasion| occasion["slug"] }
+    assert_not_includes chips, occasions(:hidden).slug
+  end
+
+  test "show finds a product whatever the letter case of the slug" do
+    get product_url("Forever-Yours-Gift-Set")
+
+    assert_response :success
+    assert_equal "forever-yours-gift-set", response.parsed_body.dig("data", "slug")
+  end
+
+  test "show returns not found for an unknown slug" do
+    get product_url("does-not-exist")
+
+    assert_response :not_found
+    assert_equal "application/json", response.media_type
+    assert_equal({ "error" => { "code" => "not_found", "message" => "Product not found" } }, response.parsed_body)
+  end
+
+  test "show returns not found for an inactive product" do
+    get product_url(products(:hidden_product).slug)
+
+    assert_response :not_found
+    assert_equal "not_found", response.parsed_body.dig("error", "code")
+  end
+
   private
     def create_product(slug, gender: "unisex", age_group: nil)
       product = Product.new(name_en: slug.titleize, slug: slug, price: 10, gender: gender, age_group: age_group)
