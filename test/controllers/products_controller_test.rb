@@ -587,6 +587,46 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "not_found", response.parsed_body.dig("error", "code")
   end
 
+  # ---------- Related products ----------
+
+  test "related responds with product cards in a data key" do
+    get related_product_url("forever-yours-gift-set")
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal [ "data" ], response.parsed_body.keys
+    assert_equal %w[ cuddly-teddy-bear-classic belgian-chocolate-box ], slugs
+  end
+
+  test "related returns the same fields as the product list cards" do
+    get related_product_url("forever-yours-gift-set")
+    related_card = response.parsed_body["data"].first
+
+    get products_url
+    list_card = product_json(related_card["slug"])
+
+    assert_equal list_card, related_card
+  end
+
+  test "related finds a product whatever the letter case of the slug" do
+    get related_product_url("Forever-Yours-Gift-Set")
+
+    assert_response :success
+  end
+
+  test "related returns not found for an unknown slug" do
+    get related_product_url("does-not-exist")
+
+    assert_response :not_found
+    assert_equal({ "error" => { "code" => "not_found", "message" => "Product not found" } }, response.parsed_body)
+  end
+
+  test "related returns not found for an inactive product" do
+    get related_product_url(products(:hidden_product).slug)
+
+    assert_response :not_found
+  end
+
   private
     def create_product(slug, gender: "unisex", age_group: nil)
       product = Product.new(name_en: slug.titleize, slug: slug, price: 10, gender: gender, age_group: age_group)

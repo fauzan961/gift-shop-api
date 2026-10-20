@@ -293,6 +293,131 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal 0, ProductOccasion.where(product_id: product.id).count
   end
 
+  # ---------- Related products ----------
+
+  test "related products put category matches before occasion matches" do
+    kites = create_category("kites")
+    loner = create_related_product("lonely-kite", category: kites)
+    loner.product_occasions.create!(occasion: occasions(:graduation))
+    category_match = create_related_product("box-kite", category: kites, rating: 1)
+    occasion_match = create_related_product("paper-hat", category: create_category("hats"), rating: 5)
+    occasion_match.product_occasions.create!(occasion: occasions(:graduation))
+
+    assert_equal [ category_match, occasion_match ], loner.related_products.first(2)
+  end
+
+  test "related products put occasion matches before the top rated fill" do
+    loner = create_related_product("lonely-kite", category: create_category("kites"))
+    loner.product_occasions.create!(occasion: occasions(:graduation))
+    occasion_match = create_related_product("paper-hat", category: create_category("hats"), rating: 1)
+    occasion_match.product_occasions.create!(occasion: occasions(:graduation))
+
+    related = loner.related_products
+
+    assert_equal occasion_match, related.first
+    assert_equal "forever-yours-gift-set", related.second.slug
+  end
+
+  test "related products rank products within a tier by rating" do
+    # Both share only Cakes with the chocolate box, and the gift set is rated higher.
+    assert_equal %w[ forever-yours-gift-set cuddly-teddy-bear-classic ], products(:chocolate_box).related_products.map(&:slug)
+  end
+
+  test "related products list a product sharing several categories only once" do
+    # The gift set is in Flowers and Cakes, and so is this bouquet.
+    bouquet = create_related_product("cake-bouquet", category: categories(:flowers), rating: 5)
+    bouquet.product_categories.create!(category: categories(:cakes))
+
+    related = products(:gift_set).related_products
+
+    assert_equal 1, related.count(bouquet)
+  end
+
+  test "related products list a product sharing several occasions only once" do
+    # The gift set suits Valentine's Day and Birthday, and so does this card.
+    card = create_related_product("love-card", category: create_category("cards"), rating: 5)
+    card.product_occasions.create!(occasion: occasions(:valentines_day))
+    card.product_occasions.create!(occasion: occasions(:birthday))
+
+    related = products(:gift_set).related_products
+
+    assert_equal 1, related.count(card)
+  end
+
+  test "related products list a product matching several tiers only once" do
+    # The teddy bear shares Cakes and Birthday with the gift set.
+    related = products(:gift_set).related_products
+
+    assert_equal related.uniq, related
+    assert_equal 1, related.count { |product| product.slug == "cuddly-teddy-bear-classic" }
+  end
+
+  test "related products never include the product itself or inactive products" do
+    related = products(:gift_set).related_products
+
+    assert_not_includes related, products(:gift_set)
+    assert_not_includes related, products(:hidden_product)
+  end
+
+  test "related products return at most four by default" do
+    5.times { |n| create_related_product("rose-bunch-#{n}", category: categories(:flowers), rating: 3) }
+
+    related = products(:gift_set).related_products
+
+    assert_equal 4, related.size
+    assert related.all? { |product| product.slug.start_with?("rose-bunch-") }, "expected the higher rated rose bunches"
+  end
+
+  test "related products accept a different limit" do
+    assert_equal 1, products(:gift_set).related_products(limit: 1).size
+  end
+
+  test "related products fill with top rated products when nothing is shared" do
+    loner = create_related_product("lonely-kite", category: create_category("kites"))
+
+    related = loner.related_products
+
+    assert_equal "forever-yours-gift-set", related.first.slug
+    assert_equal 3, related.size
+    assert_not_includes related, loner
+  end
+
+  test "related products put real matches before the fill, without repeats" do
+    kites = create_category("kites")
+    loner = create_related_product("lonely-kite", category: kites)
+    match = create_related_product("box-kite", category: kites, rating: 1)
+
+    related = loner.related_products
+
+    assert_equal match, related.first
+    assert_equal 4, related.size
+    assert_equal related.uniq, related
+  end
+
+  test "related products ignore shared inactive categories" do
+    loner = create_related_product("lonely-kite", category: create_category("kites"))
+    loner.product_categories.create!(category: categories(:hidden))
+    other = create_related_product("paper-kite", category: create_category("paper"))
+    other.product_categories.create!(category: categories(:hidden))
+
+    assert_equal "forever-yours-gift-set", loner.related_products.first.slug
+  end
+
+  test "related products ignore shared inactive occasions" do
+    loner = create_related_product("lonely-kite", category: create_category("kites"))
+    loner.product_occasions.create!(occasion: occasions(:hidden))
+    other = create_related_product("paper-kite", category: create_category("paper"))
+    other.product_occasions.create!(occasion: occasions(:hidden))
+
+    assert_equal "forever-yours-gift-set", loner.related_products.first.slug
+  end
+
+  test "related products are empty when no other active product exists" do
+    Product.where.not(id: products(:gift_set).id).update_all(active: false)
+
+    assert_equal [], products(:gift_set).related_products
+  end
+
   # ---------- Scopes ----------
 
   test "active leaves out inactive products" do
@@ -360,6 +485,17 @@ class ProductTest < ActiveSupport::TestCase
       assert_not product.valid?, "expected #{attribute} #{error_type} error, but the product was valid"
       assert product.errors.of_kind?(attribute, error_type),
              "expected #{attribute} #{error_type} error, got #{product.errors.details[attribute]}"
+    end
+
+    def create_category(slug)
+      Category.create!(name_en: slug.titleize, slug: slug)
+    end
+
+    def create_related_product(slug, category:, rating: 0)
+      product = Product.new(name_en: slug.titleize, slug: slug, price: 10, rating_average: rating)
+      product.product_categories.build(category: category, primary_category: true)
+      product.save!
+      product
     end
 
     def assert_main_category_error(product)

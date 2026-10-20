@@ -40,7 +40,30 @@ class Product < ApplicationRecord
     product_images.first
   end
 
+  def related_products(limit: 4)
+    related = []
+
+    [ shared_category_products, shared_occasion_products, Product.active ].each do |candidates|
+      break if related.size >= limit
+
+      related += candidates.where.not(id: [ id, *related.map(&:id) ])
+                           .order(rating_average: :desc, reviews_count: :desc, id: :desc)
+                           .limit(limit - related.size)
+                           .to_a
+    end
+
+    related
+  end
+
   private
+    def shared_category_products
+      Product.active.joins(:categories).where(categories: { id: category_ids, active: true }).distinct
+    end
+
+    def shared_occasion_products
+      Product.active.joins(:occasions).where(occasions: { id: occasion_ids, active: true }).distinct
+    end
+
     def must_have_one_primary_category
       links = product_categories.reject(&:marked_for_destruction?)
       return if links.count(&:primary_category) == 1

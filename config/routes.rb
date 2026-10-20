@@ -11,6 +11,8 @@ Rails.application.routes.draw do
   scope path: "api/v1" do
     resources :categories, only: :index
     resources :occasions, only: :index
-    resources :products, only: [ :index, :show ], param: :slug
+    resources :products, only: [ :index, :show ], param: :slug do
+      get :related, on: :member
+    end
   end
 end

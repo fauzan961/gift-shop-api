@@ -48,14 +48,27 @@ class ProductsController < ApplicationController
   end
 
   def show
-    product = Product.active
-                     .includes(:primary_category, :product_images)
-                     .find_by!(slug: params[:slug].to_s.downcase)
+    product = find_product(Product.active.includes(:primary_category, :product_images))
 
     render json: { data: ProductSerializer.new.serialize_details(product) }
   end
 
+  def related
+    related = find_product(Product.active).related_products
+
+    # related_products returns a plain array built from up to three queries, so
+    # includes can't be used. Preload the main categories and images the cards
+    # need in one batch for the whole list, instead of two queries per card.
+    ActiveRecord::Associations::Preloader.new(records: related, associations: [ :primary_category, :product_images ]).call
+
+    render json: { data: ProductSerializer.new.serialize_collection(related) }
+  end
+
   private
+    def find_product(scope)
+      scope.find_by!(slug: params[:slug].to_s.downcase)
+    end
+
     def filter_by_categories(scope)
       return scope if category_slugs.empty?
 
