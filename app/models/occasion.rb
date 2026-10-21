@@ -18,6 +18,13 @@ class Occasion < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(:position, :id) }
 
+  def self.active_product_counts
+    ProductOccasion.joins(:product)
+                   .merge(Product.active)
+                   .group(:occasion_id)
+                   .count
+  end
+
   def upcoming_date
     occurs_on if occurs_on && occurs_on >= Date.current
   end

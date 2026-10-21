@@ -1,9 +1,9 @@
 class OccasionSerializer
-  def serialize_collection(occasions)
-    occasions.map { |occasion| serialize(occasion) }
+  def serialize_collection(occasions, product_counts = {})
+    occasions.map { |occasion| serialize(occasion, product_counts[occasion.id]) }
   end
 
-  def serialize(occasion)
+  def serialize(occasion, product_count = nil)
     {
       slug: occasion.slug,
       nameEn: occasion.name_en,
@@ -13,7 +13,8 @@ class OccasionSerializer
       taglineAr: occasion.tagline_ar,
       image: occasion.image,
       occursOn: occasion.upcoming_date,
-      featured: occasion.featured
+      featured: occasion.featured,
+      productCount: product_count || 0
     }
   end
 end

@@ -185,6 +185,31 @@ class CategoryTest < ActiveSupport::TestCase
     end
   end
 
+  # ---------- Product stats ----------
+
+  test "active product stats count products and find the lowest price" do
+    stats = Category.active_product_stats
+
+    assert_equal({ count: 3, from_price: BigDecimal("9") }, stats[categories(:cakes).id])
+  end
+
+  test "active product stats include products linked as an extra category" do
+    # The gift set is in Cakes only as an extra category.
+    products(:teddy_bear).update_column(:active, false)
+    products(:chocolate_box).update_column(:active, false)
+
+    assert_equal({ count: 1, from_price: BigDecimal("48") }, Category.active_product_stats[categories(:cakes).id])
+  end
+
+  test "active product stats leave out inactive products" do
+    # Flowers holds the gift set and the inactive hidden product.
+    assert_equal 1, Category.active_product_stats[categories(:flowers).id][:count]
+  end
+
+  test "active product stats leave out categories without active products" do
+    assert_not Category.active_product_stats.key?(categories(:hidden).id)
+  end
+
   private
     def build_category(**attributes)
       Category.new({ name_en: "Toys", slug: "toys" }.merge(attributes))

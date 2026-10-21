@@ -240,6 +240,25 @@ class OccasionTest < ActiveSupport::TestCase
     end
   end
 
+  # ---------- Product counts ----------
+
+  test "active product counts count the products for each occasion" do
+    counts = Occasion.active_product_counts
+
+    assert_equal 1, counts[occasions(:valentines_day).id]
+    assert_equal 2, counts[occasions(:birthday).id]
+  end
+
+  test "active product counts leave out inactive products" do
+    ProductOccasion.create!(product: products(:hidden_product), occasion: occasions(:birthday))
+
+    assert_equal 2, Occasion.active_product_counts[occasions(:birthday).id]
+  end
+
+  test "active product counts leave out occasions without active products" do
+    assert_not Occasion.active_product_counts.key?(occasions(:graduation).id)
+  end
+
   private
     def build_occasion(**attributes)
       Occasion.new({ name_en: "Eid", slug: "eid" }.merge(attributes))

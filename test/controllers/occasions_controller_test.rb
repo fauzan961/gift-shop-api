@@ -39,10 +39,43 @@ class OccasionsControllerTest < ActionDispatch::IntegrationTest
         "taglineAr" => "عبّر بالورود",
         "image" => "/assets/images/flowers.jpg",
         "occursOn" => (Date.current + 30).iso8601,
-        "featured" => true
+        "featured" => true,
+        "productCount" => 1
       },
       occasion_json("valentines-day")
     )
+  end
+
+  test "index counts the active products for each occasion" do
+    get occasions_url
+
+    assert_equal 2, occasion_json("birthday")["productCount"]
+  end
+
+  test "index shows zero products for an occasion without active products" do
+    get occasions_url
+
+    assert_equal 0, occasion_json("graduation")["productCount"]
+  end
+
+  test "index leaves inactive products out of the count" do
+    ProductOccasion.create!(product: products(:hidden_product), occasion: occasions(:valentines_day))
+
+    get occasions_url
+
+    assert_equal 1, occasion_json("valentines-day")["productCount"]
+  end
+
+  test "index sends the product count as a number" do
+    get occasions_url
+
+    assert_kind_of Integer, occasion_json("birthday")["productCount"]
+  end
+
+  test "index takes the same number of queries however many occasions exist" do
+    5.times { |n| Occasion.create!(name_en: "Extra #{n}", slug: "extra-#{n}", position: 10 + n) }
+
+    assert_queries_count(2) { get occasions_url }
   end
 
   test "index returns null for an occasion without a date" do

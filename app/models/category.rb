@@ -17,4 +17,12 @@ class Category < ApplicationRecord
 
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(:position, :id) }
+
+  def self.active_product_stats
+    ProductCategory.joins(:product)
+                   .merge(Product.active)
+                   .group(:category_id)
+                   .pluck(:category_id, Arel.sql("COUNT(*)"), Arel.sql("MIN(products.price)"))
+                   .to_h { |category_id, count, from_price| [ category_id, { count: count, from_price: from_price } ] }
+  end
 end

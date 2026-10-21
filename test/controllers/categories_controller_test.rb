@@ -35,10 +35,53 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
         "taglineEn" => "Hand-tied blooms, cut fresh daily",
         "taglineAr" => "باقات مصنوعة يدويًا، تُقطف طازجة يوميًا",
         "image" => "/assets/images/flowers.jpg",
-        "theme" => "tint-blush"
+        "theme" => "tint-blush",
+        "productCount" => 1,
+        "fromPrice" => 48.0
       },
       flowers
     )
+  end
+
+  test "index counts products linked as an extra category" do
+    get categories_url
+
+    # Cakes holds the teddy bear and chocolate box as their main category,
+    # and the gift set as an extra one.
+    cakes = category_json("cakes")
+    assert_equal 3, cakes["productCount"]
+    assert_equal 9.0, cakes["fromPrice"]
+  end
+
+  test "index leaves inactive products out of the count and lowest price" do
+    products(:hidden_product).update_column(:price, 1)
+
+    get categories_url
+
+    flowers = category_json("flowers")
+    assert_equal 1, flowers["productCount"]
+    assert_equal 48.0, flowers["fromPrice"]
+  end
+
+  test "index shows zero products and no price for a category without active products" do
+    Category.create!(name_en: "Toys", slug: "toys", position: 3)
+
+    get categories_url
+
+    assert_equal 0, category_json("toys")["productCount"]
+    assert_nil category_json("toys")["fromPrice"]
+  end
+
+  test "index sends the lowest price as a number" do
+    get categories_url
+
+    assert_kind_of Numeric, category_json("cakes")["fromPrice"]
+  end
+
+  test "index takes the same number of queries however many categories exist" do
+    5.times { |n| Category.create!(name_en: "Extra #{n}", slug: "extra-#{n}", position: 10 + n) }
+
+    assert_queries_count(2) { get categories_url }
   end
 
   test "index returns null for missing Arabic text" do
@@ -58,4 +101,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal [], response.parsed_body["data"]
   end
+
+  private
+    def category_json(slug)
+      response.parsed_body["data"].find { |category| category["slug"] == slug }
+    end
 end
