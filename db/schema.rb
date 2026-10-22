@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_131031) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_125143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_131031) do
     t.check_constraint "reviews_count >= 0", name: "products_reviews_count_not_negative"
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "products_slug_format"
     t.check_constraint "stock >= 0", name: "products_stock_not_negative"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "mobile", limit: 8, null: false
+    t.string "full_name", limit: 100
+    t.string "email", limit: 255
+    t.date "birthday"
+    t.boolean "order_sms", default: true, null: false
+    t.boolean "occasion_reminders", default: true, null: false
+    t.boolean "offers_email", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true
+    t.index ["mobile"], name: "index_users_on_mobile", unique: true
+    t.check_constraint "mobile::text ~ '^[569][0-9]{7}$'::text", name: "users_mobile_format"
   end
 
   add_foreign_key "product_categories", "categories"

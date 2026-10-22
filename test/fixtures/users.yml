@@ -1,0 +1,16 @@
+layla:
+  mobile: "50000001"
+  full_name: Layla Al-Sabah
+  email: layla@mail.com
+  birthday: 1995-03-21
+  order_sms: true
+  occasion_reminders: true
+  offers_email: true
+
+omar:
+  mobile: "60000002"
+
+blocked:
+  mobile: "90000003"
+  full_name: Blocked User
+  active: false
