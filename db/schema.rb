@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_125143) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_125641) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_125143) do
     t.index ["name_en"], name: "index_categories_on_name_en", unique: true
     t.index ["slug"], name: "index_categories_on_slug", unique: true
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "categories_slug_format"
+  end
+
+  create_table "login_codes", force: :cascade do |t|
+    t.string "mobile", limit: 8, null: false
+    t.string "code_digest", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["mobile", "created_at"], name: "index_login_codes_on_mobile_and_created_at"
+    t.check_constraint "attempts >= 0", name: "login_codes_attempts_not_negative"
+    t.check_constraint "mobile::text ~ '^[569][0-9]{7}$'::text", name: "login_codes_mobile_format"
   end
 
   create_table "occasions", force: :cascade do |t|
