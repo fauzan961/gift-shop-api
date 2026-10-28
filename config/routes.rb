@@ -14,5 +14,7 @@ Rails.application.routes.draw do
     resources :products, only: [ :index, :show ], param: :slug do
       get :related, on: :member
     end
+
+    post "auth/code", to: "auth_codes#create", as: :auth_code
   end
 end

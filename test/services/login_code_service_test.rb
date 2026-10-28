@@ -64,6 +64,7 @@ class LoginCodeServiceTest < ActiveSupport::TestCase
 
   test "issue accepts a mobile number with spaces or dashes" do
     @service.issue(" 5000 0001 ")
+    wait_for_resend
     @service.issue("5000-0001")
 
     assert_equal 2, LoginCode.where(mobile: MOBILE).count
@@ -71,6 +72,84 @@ class LoginCodeServiceTest < ActiveSupport::TestCase
 
   test "issue rejects a badly formatted mobile number" do
     assert_raises(ActiveRecord::RecordInvalid) { @service.issue("40000000") }
+  end
+
+  # ---------- Limits ----------
+
+  test "issue refuses a new code within the resend time" do
+    freeze_time do
+      @service.issue(MOBILE)
+      travel 12.seconds
+
+      error = assert_raises(LoginCodeService::TooManyRequests) { @service.issue(MOBILE) }
+      assert_equal 18, error.retry_after
+    end
+  end
+
+  test "issue allows a new code once the resend time has passed" do
+    @service.issue(MOBILE)
+    wait_for_resend
+
+    assert_nothing_raised { @service.issue(MOBILE) }
+  end
+
+  test "issue does not save a code when it refuses" do
+    @service.issue(MOBILE)
+
+    assert_no_difference -> { LoginCode.count } do
+      assert_raises(LoginCodeService::TooManyRequests) { @service.issue(MOBILE) }
+    end
+  end
+
+  test "issue refuses more codes than the hourly limit" do
+    freeze_time do
+      issue_hourly_limit
+      wait_for_resend
+
+      assert_raises(LoginCodeService::TooManyRequests) { @service.issue(MOBILE) }
+    end
+  end
+
+  test "issue says how long until the oldest code in the hour stops counting" do
+    freeze_time do
+      first_sent_at = Time.current
+      issue_hourly_limit
+      wait_for_resend
+
+      error = assert_raises(LoginCodeService::TooManyRequests) { @service.issue(MOBILE) }
+      assert_equal ((first_sent_at + 1.hour) - Time.current).ceil, error.retry_after
+    end
+  end
+
+  test "issue allows a code again once the oldest one is over an hour old" do
+    freeze_time do
+      first_sent_at = Time.current
+      issue_hourly_limit
+      travel_to first_sent_at + 1.hour + 1.second
+
+      assert_nothing_raised { @service.issue(MOBILE) }
+    end
+  end
+
+  test "issue does not count codes older than an hour" do
+    LoginCode::MAX_PER_HOUR.times do
+      @service.issue(MOBILE)
+      travel 15.minutes
+    end
+
+    assert_nothing_raised { @service.issue(MOBILE) }
+  end
+
+  test "issue limits each mobile number separately" do
+    @service.issue(MOBILE)
+
+    assert_nothing_raised { @service.issue("60000002") }
+  end
+
+  test "issue applies the limits whatever spaces the mobile number has" do
+    @service.issue(MOBILE)
+
+    assert_raises(LoginCodeService::TooManyRequests) { @service.issue("5000 0001") }
   end
 
   # ---------- verify ----------
@@ -128,7 +207,7 @@ class LoginCodeServiceTest < ActiveSupport::TestCase
 
   test "verify only accepts the newest code for a mobile number" do
     with_random_number(1111) { @service.issue(MOBILE) }
-    travel 1.second
+    wait_for_resend
     with_random_number(2222) { @service.issue(MOBILE) }
 
     assert_not @service.verify(MOBILE, "1111")
@@ -137,7 +216,7 @@ class LoginCodeServiceTest < ActiveSupport::TestCase
 
   test "verify counts a wrong attempt on the newest code only" do
     with_random_number(1111) { @service.issue(MOBILE) }
-    travel 1.second
+    wait_for_resend
     with_random_number(2222) { @service.issue(MOBILE) }
 
     @service.verify(MOBILE, "1111")
@@ -165,12 +244,24 @@ class LoginCodeServiceTest < ActiveSupport::TestCase
   end
 
   private
+    # Time travel drops fractions of a second, so wait one second past the
+    # resend time to be sure the last code is old enough.
+    def wait_for_resend
+      travel LoginCode::RESEND_AFTER + 1.second
+    end
+
+    # Sends the hourly maximum, each just after the resend time.
+    def issue_hourly_limit
+      LoginCode::MAX_PER_HOUR.times do |n|
+        wait_for_resend unless n.zero?
+        @service.issue(MOBILE)
+      end
+    end
+
     def wrong_code(code)
       code == "0000" ? "1111" : "0000"
     end
 
-    # Makes SecureRandom return a fixed number inside the block. The real method
-    # comes from Random::Formatter, so removing the override restores it.
     def with_random_number(value)
       SecureRandom.define_singleton_method(:random_number) { |*| value }
       yield

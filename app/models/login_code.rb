@@ -2,6 +2,8 @@ class LoginCode < ApplicationRecord
   CODE_LENGTH = 4
   LIFETIME = 5.minutes
   MAX_ATTEMPTS = 5
+  RESEND_AFTER = 30.seconds
+  MAX_PER_HOUR = 5
 
   normalizes :mobile, with: ->(value) { value.gsub(/[\s-]/, "") }
 
