@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   MOBILE_FORMAT = /\A[569]\d{7}\z/
 
+  has_many :sessions
+
   normalizes :mobile, with: ->(value) { value.gsub(/[\s-]/, "") }
   normalizes :full_name, with: ->(value) { value.squish.presence }
   normalizes :email, with: ->(value) { value.strip.downcase.presence }

@@ -1,0 +1,23 @@
+# Each token_digest is the SHA-256 hash of a known test token, so tests can
+# sign in with the plain token, for example "layla-phone-token".
+layla_phone:
+  user: layla
+  token_digest: <%= Digest::SHA256.hexdigest("layla-phone-token") %>
+  expires_at: <%= 20.days.from_now %>
+  last_used_at: <%= 10.days.ago %>
+  ip_address: 192.168.1.10
+  user_agent: Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0 Mobile/15E148 Safari/604.1
+
+layla_laptop:
+  user: layla
+  token_digest: <%= Digest::SHA256.hexdigest("layla-laptop-token") %>
+  expires_at: <%= 10.days.from_now %>
+  last_used_at: <%= 20.days.ago %>
+  ip_address: 2001:db8:85a3::8a2e:370:7334
+  user_agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36
+
+omar_expired:
+  user: omar
+  token_digest: <%= Digest::SHA256.hexdigest("omar-expired-token") %>
+  expires_at: <%= 1.day.ago %>
+  last_used_at: <%= 31.days.ago %>
