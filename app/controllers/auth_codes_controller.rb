@@ -15,11 +15,4 @@ class AuthCodesController < ApplicationController
   rescue LoginCodeService::TooManyRequests => error
     render_too_many_requests(error.retry_after, error.message)
   end
-
-  private
-    def render_too_many_requests(retry_after, message)
-      response.headers["Retry-After"] = retry_after.to_s
-      render json: { error: { code: "too_many_requests", message: message, retryAfter: retry_after } },
-             status: :too_many_requests
-    end
 end

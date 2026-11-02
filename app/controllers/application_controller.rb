@@ -3,9 +3,17 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid, with: :render_validation_failed
 
   private
+    def render_error(status, code, message, **extra)
+      render json: { error: { code: code, message: message, **extra } }, status: status
+    end
+
+    def render_too_many_requests(retry_after, message)
+      response.headers["Retry-After"] = retry_after.to_s
+      render_error(:too_many_requests, "too_many_requests", message, retryAfter: retry_after)
+    end
+
     def render_not_found(exception)
-      render json: { error: { code: "not_found", message: "#{exception.model || "Record"} not found" } },
-             status: :not_found
+      render_error(:not_found, "not_found", "#{exception.model || "Record"} not found")
     end
 
     def render_validation_failed(exception)
