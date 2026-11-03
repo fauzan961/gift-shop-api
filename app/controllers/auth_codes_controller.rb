@@ -2,6 +2,8 @@ class AuthCodesController < ApplicationController
   IP_LIMIT = 10
   IP_LIMIT_WINDOW = 1.hour
 
+  allow_unauthenticated_access
+
   rate_limit to: IP_LIMIT, within: IP_LIMIT_WINDOW,
              with: -> { render_too_many_requests(IP_LIMIT_WINDOW.to_i, "Too many code requests from this network.") }
 

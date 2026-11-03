@@ -17,5 +17,6 @@ Rails.application.routes.draw do
 
     post "auth/code", to: "auth_codes#create", as: :auth_code
     post "auth/verify", to: "auth_sessions#create", as: :auth_verify
+    delete "auth/session", to: "auth_sessions#destroy", as: :auth_session
   end
 end

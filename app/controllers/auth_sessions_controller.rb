@@ -2,7 +2,9 @@ class AuthSessionsController < ApplicationController
   IP_LIMIT = 20
   IP_LIMIT_WINDOW = 1.hour
 
-  rate_limit to: IP_LIMIT, within: IP_LIMIT_WINDOW,
+  allow_unauthenticated_access only: :create
+
+  rate_limit to: IP_LIMIT, within: IP_LIMIT_WINDOW, only: :create,
              with: -> { render_too_many_requests(IP_LIMIT_WINDOW.to_i, "Too many sign-in attempts from this network.") }
 
   def create
@@ -20,5 +22,10 @@ class AuthSessionsController < ApplicationController
     render json: {
       data: { token: token, newUser: user.previously_new_record?, user: UserSerializer.new.serialize(user) }
     }, status: :created
+  end
+
+  def destroy
+    Current.session.destroy
+    head :no_content
   end
 end

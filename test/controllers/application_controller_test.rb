@@ -1,9 +1,9 @@
 require "test_helper"
 
-# Tests the error responses every controller shares, through a small
-# controller that exists only for these tests.
 class ApplicationControllerTest < ActionDispatch::IntegrationTest
   class ErrorsController < ApplicationController
+    allow_unauthenticated_access
+
     def missing
       Product.find_by!(slug: "does-not-exist")
     end

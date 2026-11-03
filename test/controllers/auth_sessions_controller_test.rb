@@ -196,7 +196,72 @@ class AuthSessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
   end
 
+  # ---------- Signing out ----------
+
+  test "sign out ends the session" do
+    session_id = sessions(:layla_phone).id
+
+    delete auth_session_url, headers: bearer("layla-phone-token")
+
+    assert_response :no_content
+    assert_empty response.body
+    assert_not Session.exists?(session_id)
+  end
+
+  test "sign out makes the token stop working" do
+    delete auth_session_url, headers: bearer("layla-phone-token")
+
+    delete auth_session_url, headers: bearer("layla-phone-token")
+
+    assert_response :unauthorized
+    assert_nil SessionService.new.find("layla-phone-token")
+  end
+
+  test "sign out keeps the user's other devices signed in" do
+    delete auth_session_url, headers: bearer("layla-phone-token")
+
+    assert_equal sessions(:layla_laptop), SessionService.new.find("layla-laptop-token")
+  end
+
+  test "sign out works with a token from verifying a code" do
+    code = @codes.issue(users(:omar).mobile)
+    post auth_verify_url, params: { mobile: users(:omar).mobile, code: code }, as: :json
+    token = response.parsed_body.dig("data", "token")
+
+    delete auth_session_url, headers: bearer(token)
+
+    assert_response :no_content
+    assert_nil SessionService.new.find(token)
+  end
+
+  test "sign out without a valid token is refused and deletes nothing" do
+    [ {}, bearer("not-a-real-token"), bearer("omar-expired-token") ].each do |headers|
+      assert_no_difference -> { Session.count } do
+        delete auth_session_url, headers: headers
+      end
+
+      assert_response :unauthorized
+      assert_equal "unauthenticated", response.parsed_body.dig("error", "code")
+    end
+  end
+
+  test "sign outs do not count toward the sign-in limit for an IP address" do
+    AuthSessionsController::IP_LIMIT.times do
+      token = SessionService.new.start(users(:omar))
+      delete auth_session_url, headers: bearer(token), env: { "REMOTE_ADDR" => "10.0.0.1" }
+    end
+    code = @codes.issue(users(:layla).mobile)
+
+    post auth_verify_url, params: { mobile: users(:layla).mobile, code: code }, as: :json, env: { "REMOTE_ADDR" => "10.0.0.1" }
+
+    assert_response :created
+  end
+
   private
+    def bearer(token)
+      { "Authorization" => "Bearer #{token}" }
+    end
+
     def wrong_code(code)
       code == "0000" ? "1111" : "0000"
     end

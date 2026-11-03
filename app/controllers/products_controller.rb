@@ -16,6 +16,8 @@ class ProductsController < ApplicationController
   }.freeze
   AGE_GROUP_PARAMS = { "0-6" => "0-6", "6-18" => "6-18", "18-plus" => "18+" }.freeze
 
+  allow_unauthenticated_access
+
   def index
     scope = Product.active
     scope = filter_by_categories(scope)

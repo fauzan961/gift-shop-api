@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::API
+  include Authentication
+
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_validation_failed
 

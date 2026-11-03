@@ -8,6 +8,12 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "application/json", response.media_type
   end
 
+  test "index works without signing in, even with an invalid token" do
+    get categories_url, headers: { "Authorization" => "Bearer not-a-real-token" }
+
+    assert_response :success
+  end
+
   test "index lists active categories in position order" do
     get categories_url
 
