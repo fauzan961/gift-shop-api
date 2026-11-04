@@ -103,6 +103,22 @@ class UserTest < ActiveSupport::TestCase
     assert build_user(birthday: nil).valid?
   end
 
+  test "accepts a birthday sent as text" do
+    assert_equal Date.new(1995, 3, 21), build_user(birthday: "1995-03-21").birthday
+    assert build_user(birthday: "1995-03-21").valid?
+  end
+
+  test "rejects a birthday that is not a real date" do
+    [ "not-a-date", "2024-02-30", "21/13/1995" ].each do |birthday|
+      assert_invalid build_user(birthday: birthday), :birthday, "is not a valid date"
+    end
+  end
+
+  test "treats a blank birthday as no birthday" do
+    assert build_user(birthday: "").valid?
+    assert_nil build_user(birthday: "").birthday
+  end
+
   test "allows a birthday of today but not in the future" do
     assert build_user(birthday: Date.current).valid?
     assert_invalid build_user(birthday: Date.current + 1), :birthday, "can't be in the future"

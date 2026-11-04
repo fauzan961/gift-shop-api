@@ -12,11 +12,16 @@ class User < ApplicationRecord
   validates :email, uniqueness: { case_sensitive: false }, length: { maximum: 255 },
                     format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
   validates :order_sms, :occasion_reminders, :offers_email, :active, inclusion: { in: [ true, false ] }
+  validate :birthday_must_be_a_date
   validate :birthday_cannot_be_in_the_future
 
   scope :active, -> { where(active: true) }
 
   private
+    def birthday_must_be_a_date
+      errors.add(:birthday, "is not a valid date") if birthday.nil? && birthday_before_type_cast.present?
+    end
+
     def birthday_cannot_be_in_the_future
       errors.add(:birthday, "can't be in the future") if birthday&.future?
     end
