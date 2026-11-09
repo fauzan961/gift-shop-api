@@ -10,9 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_123057) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_122210) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "addresses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "address_type", limit: 10, null: false
+    t.string "address", limit: 255, null: false
+    t.string "block_area", limit: 100, null: false
+    t.string "city", limit: 100, null: false
+    t.boolean "is_default", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_addresses_on_user_id"
+    t.index ["user_id"], name: "index_addresses_on_user_id_default", unique: true, where: "is_default"
+    t.check_constraint "address_type::text = ANY (ARRAY['Home'::character varying, 'Work'::character varying, 'Other'::character varying]::text[])", name: "addresses_address_type_allowed"
+  end
 
   create_table "categories", force: :cascade do |t|
     t.string "name_en", limit: 50, null: false
@@ -148,6 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_123057) do
     t.check_constraint "mobile::text ~ '^[569][0-9]{7}$'::text", name: "users_mobile_format"
   end
 
+  add_foreign_key "addresses", "users", on_delete: :cascade
   add_foreign_key "product_categories", "categories"
   add_foreign_key "product_categories", "products", on_delete: :cascade
   add_foreign_key "product_images", "products", on_delete: :cascade

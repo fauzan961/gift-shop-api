@@ -1,0 +1,23 @@
+layla_home:
+  user: layla
+  address_type: Home
+  address: Street 12, House 4
+  block_area: Block 5, Salmiya
+  city: Kuwait City
+  is_default: true
+
+layla_work:
+  user: layla
+  address_type: Work
+  address: Tower 2, Floor 9
+  block_area: Block 1, Sharq
+  city: Kuwait City
+  is_default: false
+
+omar_home:
+  user: omar
+  address_type: Home
+  address: Street 3, House 18
+  block_area: Block 4, Jabriya
+  city: Hawalli
+  is_default: true
