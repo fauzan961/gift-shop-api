@@ -20,5 +20,6 @@ Rails.application.routes.draw do
     delete "auth/session", to: "auth_sessions#destroy", as: :auth_session
 
     resource :profile, only: [ :show, :update ]
+    resources :addresses, only: [ :index, :create, :update, :destroy ]
   end
 end
