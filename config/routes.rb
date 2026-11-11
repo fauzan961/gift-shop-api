@@ -21,5 +21,6 @@ Rails.application.routes.draw do
 
     resource :profile, only: [ :show, :update ]
     resources :addresses, only: [ :index, :create, :update, :destroy ]
+    resources :favorites, only: [ :index, :create, :destroy ], param: :slug
   end
 end

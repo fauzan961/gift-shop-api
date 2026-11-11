@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_122210) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_130145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_122210) do
     t.index ["name_en"], name: "index_categories_on_name_en", unique: true
     t.index ["slug"], name: "index_categories_on_slug", unique: true
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "categories_slug_format"
+  end
+
+  create_table "favorites", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "product_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_favorites_on_product_id"
+    t.index ["user_id", "product_id"], name: "index_favorites_on_user_id_and_product_id", unique: true
   end
 
   create_table "login_codes", force: :cascade do |t|
@@ -163,6 +172,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_122210) do
   end
 
   add_foreign_key "addresses", "users", on_delete: :cascade
+  add_foreign_key "favorites", "products", on_delete: :cascade
+  add_foreign_key "favorites", "users", on_delete: :cascade
   add_foreign_key "product_categories", "categories"
   add_foreign_key "product_categories", "products", on_delete: :cascade
   add_foreign_key "product_images", "products", on_delete: :cascade
