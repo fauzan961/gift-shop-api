@@ -40,9 +40,9 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
 
   test "index takes the same number of queries however many favorites there are" do
     Favorite.create!(user: users(:layla), product: products(:chocolate_box))
-    get favorites_url, headers: bearer("layla-phone-token")
+    token = SessionService.new.start(users(:layla))
 
-    assert_queries_count(7) { get favorites_url, headers: bearer("layla-phone-token") }
+    assert_queries_count(7) { get favorites_url, headers: bearer(token) }
   end
 
   # ---------- Adding ----------
@@ -94,11 +94,13 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
   # ---------- Removing ----------
 
   test "destroy removes the product from the user's favorites" do
+    favorite_id = favorites(:layla_gift_set).id
+
     delete favorite_url("forever-yours-gift-set"), headers: bearer("layla-phone-token")
 
     assert_response :no_content
     assert_empty response.body
-    assert_not Favorite.exists?(favorites(:layla_gift_set).id)
+    assert_not Favorite.exists?(favorite_id)
   end
 
   test "destroy leaves other users' favorites alone" do
