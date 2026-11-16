@@ -46,6 +46,7 @@ class FavoriteTest < ActiveSupport::TestCase
   end
 
   test "database deletes the favorites when the user is deleted" do
+    Order.where(user: users(:layla)).delete_all
     users(:layla).delete
 
     assert_empty Favorite.where(user_id: users(:layla).id)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_130145) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_15_130211) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,6 +87,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_130145) do
     t.index ["name_en"], name: "index_occasions_on_name_en", unique: true
     t.index ["slug"], name: "index_occasions_on_slug", unique: true
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "occasions_slug_format"
+  end
+
+  create_table "order_items", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.bigint "product_id"
+    t.string "product_name_en", limit: 100, null: false
+    t.string "product_name_ar", limit: 100
+    t.decimal "unit_price", precision: 10, scale: 3, null: false
+    t.integer "quantity", null: false
+    t.decimal "line_total", precision: 10, scale: 3, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id", unique: true
+    t.index ["product_id"], name: "index_order_items_on_product_id"
+    t.check_constraint "line_total = (unit_price * quantity::numeric)", name: "order_items_line_total_adds_up"
+    t.check_constraint "quantity >= 1 AND quantity <= 99", name: "order_items_quantity_allowed"
+    t.check_constraint "unit_price > 0::numeric", name: "order_items_unit_price_positive"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "number", limit: 25, null: false
+    t.string "status", limit: 20, default: "pending_payment", null: false
+    t.string "recipient_name", limit: 100, null: false
+    t.string "address", limit: 255, null: false
+    t.string "block_area", limit: 100, null: false
+    t.string "city", limit: 100, null: false
+    t.date "delivery_date", null: false
+    t.string "delivery_slot", limit: 10, null: false
+    t.string "gift_message", limit: 200
+    t.string "payment_method", limit: 20, null: false
+    t.decimal "subtotal", precision: 10, scale: 3, null: false
+    t.decimal "delivery_fee", precision: 10, scale: 3, null: false
+    t.decimal "total", precision: 10, scale: 3, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["number"], name: "index_orders_on_number", unique: true
+    t.index ["user_id", "created_at"], name: "index_orders_on_user_id_and_created_at"
+    t.check_constraint "delivery_slot::text = ANY (ARRAY['09-12'::character varying, '12-15'::character varying, '15-18'::character varying, '18-21'::character varying]::text[])", name: "orders_delivery_slot_allowed"
+    t.check_constraint "payment_method::text = ANY (ARRAY['mpgs'::character varying, 'knet'::character varying, 'apple_pay'::character varying]::text[])", name: "orders_payment_method_allowed"
+    t.check_constraint "status::text = ANY (ARRAY['pending_payment'::character varying, 'preparing'::character varying, 'on_the_way'::character varying, 'delivered'::character varying, 'cancelled'::character varying]::text[])", name: "orders_status_allowed"
+    t.check_constraint "subtotal > 0::numeric AND delivery_fee >= 0::numeric AND total = (subtotal + delivery_fee)", name: "orders_totals_add_up"
   end
 
   create_table "product_categories", force: :cascade do |t|
@@ -174,6 +216,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_130145) do
   add_foreign_key "addresses", "users", on_delete: :cascade
   add_foreign_key "favorites", "products", on_delete: :cascade
   add_foreign_key "favorites", "users", on_delete: :cascade
+  add_foreign_key "order_items", "orders", on_delete: :cascade
+  add_foreign_key "order_items", "products", on_delete: :nullify
+  add_foreign_key "orders", "users"
   add_foreign_key "product_categories", "categories"
   add_foreign_key "product_categories", "products", on_delete: :cascade
   add_foreign_key "product_images", "products", on_delete: :cascade

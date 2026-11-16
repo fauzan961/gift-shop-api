@@ -1,0 +1,64 @@
+layla_delivered:
+  user: layla
+  number: "26110412345"
+  status: delivered
+  recipient_name: Layla Al-Sabah
+  address: Street 12, House 4
+  block_area: Block 5, Salmiya
+  city: Kuwait City
+  delivery_date: <%= 10.days.ago.to_date %>
+  delivery_slot: "09-12"
+  payment_method: knet
+  subtotal: 104.000
+  delivery_fee: 0.000
+  total: 104.000
+  created_at: <%= 12.days.ago %>
+
+layla_preparing:
+  user: layla
+  number: "26111467890"
+  status: preparing
+  recipient_name: Sara Al-Sabah
+  address: Street 3, House 18
+  block_area: Block 4, Jabriya
+  city: Hawalli
+  delivery_date: <%= 2.days.from_now.to_date %>
+  delivery_slot: "15-18"
+  gift_message: Happy birthday, Sara!
+  payment_method: mpgs
+  subtotal: 12.500
+  delivery_fee: 2.000
+  total: 14.500
+  created_at: <%= 1.day.ago %>
+
+layla_pending_payment:
+  user: layla
+  number: "26111600001"
+  status: pending_payment
+  recipient_name: Layla Al-Sabah
+  address: Street 12, House 4
+  block_area: Block 5, Salmiya
+  city: Kuwait City
+  delivery_date: <%= 3.days.from_now.to_date %>
+  delivery_slot: "18-21"
+  payment_method: apple_pay
+  subtotal: 9.000
+  delivery_fee: 2.000
+  total: 11.000
+  created_at: <%= 1.hour.ago %>
+
+omar_on_the_way:
+  user: omar
+  number: "26111611111"
+  status: on_the_way
+  recipient_name: Omar Al-Mutairi
+  address: Street 3, House 18
+  block_area: Block 4, Jabriya
+  city: Hawalli
+  delivery_date: <%= Date.current %>
+  delivery_slot: "12-15"
+  payment_method: knet
+  subtotal: 48.000
+  delivery_fee: 0.000
+  total: 48.000
+  created_at: <%= 2.hours.ago %>

@@ -121,6 +121,7 @@ class AddressTest < ActiveSupport::TestCase
 
   test "database deletes the addresses when the user is deleted" do
     address_ids = users(:layla).addresses.ids
+    Order.where(user: users(:layla)).delete_all
 
     users(:layla).delete
 

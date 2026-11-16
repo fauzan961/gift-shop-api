@@ -133,6 +133,7 @@ class SessionTest < ActiveSupport::TestCase
 
   test "deleting a user removes their sessions" do
     user = users(:layla)
+    Order.where(user: user).delete_all
     user.destroy
 
     assert_equal 0, Session.where(user_id: user.id).count

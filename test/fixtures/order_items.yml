@@ -1,0 +1,49 @@
+layla_delivered_chocolate:
+  order: layla_delivered
+  product: chocolate_box
+  product_name_en: Belgian Chocolate Box
+  unit_price: 12.500
+  quantity: 3
+  line_total: 37.500
+
+layla_delivered_gift_set:
+  order: layla_delivered
+  product: gift_set
+  product_name_en: Forever Yours Gift Set
+  product_name_ar: طقم هدايا للأبد لك
+  unit_price: 48.000
+  quantity: 1
+  line_total: 48.000
+
+# The product was deleted after the order, so only the copied name and price remain.
+layla_delivered_deleted_product:
+  order: layla_delivered
+  product_name_en: Red Rose Grand Bouquet
+  unit_price: 18.500
+  quantity: 1
+  line_total: 18.500
+
+layla_preparing_chocolate:
+  order: layla_preparing
+  product: chocolate_box
+  product_name_en: Belgian Chocolate Box
+  unit_price: 12.500
+  quantity: 1
+  line_total: 12.500
+
+layla_pending_payment_teddy_bear:
+  order: layla_pending_payment
+  product: teddy_bear
+  product_name_en: Cuddly Teddy Bear Classic
+  unit_price: 9.000
+  quantity: 1
+  line_total: 9.000
+
+omar_on_the_way_gift_set:
+  order: omar_on_the_way
+  product: gift_set
+  product_name_en: Forever Yours Gift Set
+  product_name_ar: طقم هدايا للأبد لك
+  unit_price: 48.000
+  quantity: 1
+  line_total: 48.000
