@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_15_130211) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_122812) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -127,7 +127,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_130211) do
     t.index ["user_id", "created_at"], name: "index_orders_on_user_id_and_created_at"
     t.check_constraint "delivery_slot::text = ANY (ARRAY['09-12'::character varying, '12-15'::character varying, '15-18'::character varying, '18-21'::character varying]::text[])", name: "orders_delivery_slot_allowed"
     t.check_constraint "payment_method::text = ANY (ARRAY['mpgs'::character varying, 'knet'::character varying, 'apple_pay'::character varying]::text[])", name: "orders_payment_method_allowed"
-    t.check_constraint "status::text = ANY (ARRAY['pending_payment'::character varying, 'preparing'::character varying, 'on_the_way'::character varying, 'delivered'::character varying, 'cancelled'::character varying]::text[])", name: "orders_status_allowed"
+    t.check_constraint "status::text = ANY (ARRAY['pending_payment'::character varying, 'expired'::character varying, 'preparing'::character varying, 'on_the_way'::character varying, 'delivered'::character varying, 'cancelled'::character varying]::text[])", name: "orders_status_allowed"
     t.check_constraint "subtotal > 0::numeric AND delivery_fee >= 0::numeric AND total = (subtotal + delivery_fee)", name: "orders_totals_add_up"
   end
 

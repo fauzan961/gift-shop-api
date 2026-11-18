@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   def index
-    orders = Current.user.orders.where.not(status: "pending_payment")
+    orders = Current.user.orders.where.not(status: %w[ pending_payment expired ])
                     .includes(order_items: { product: [ :primary_category, :product_images ] })
                     .order(created_at: :desc)
     render json: { data: orders.map { |order| OrderSerializer.new.serialize(order) } }

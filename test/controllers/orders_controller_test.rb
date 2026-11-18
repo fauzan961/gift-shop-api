@@ -122,6 +122,16 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ orders(:layla_preparing).number, orders(:layla_delivered).number ], response.parsed_body["data"].pluck("number")
   end
 
+  test "index hides expired orders but shows cancelled ones" do
+    orders(:layla_pending_payment).update!(status: "expired")
+    orders(:layla_delivered).update!(status: "cancelled")
+
+    get orders_url, headers: bearer("layla-phone-token")
+
+    assert_equal [ [ orders(:layla_preparing).number, "preparing" ], [ orders(:layla_delivered).number, "cancelled" ] ],
+                 response.parsed_body["data"].pluck("number", "status")
+  end
+
   test "index never shows another user's orders" do
     get orders_url, headers: bearer(SessionService.new.start(users(:omar)))
 
@@ -182,6 +192,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
       },
       response.parsed_body["data"]
     )
+  end
+
+  test "show includes an expired order, so Angular can explain the payment timed out" do
+    orders(:layla_pending_payment).update!(status: "expired")
+
+    get order_url(orders(:layla_pending_payment).number), headers: bearer("layla-phone-token")
+
+    assert_response :success
+    assert_equal "expired", response.parsed_body.dig("data", "status")
   end
 
   test "show includes an unpaid order, so payment can continue" do

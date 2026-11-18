@@ -203,6 +203,67 @@ class OrderServiceTest < ActiveSupport::TestCase
     assert_equal first_stock, first.reload.stock
   end
 
+  # ---------- Expiring unpaid orders ----------
+
+  test "expire_unpaid expires orders unpaid for over 30 minutes and returns their stock" do
+    @service.expire_unpaid
+
+    assert_equal "expired", orders(:layla_pending_payment).reload.status
+    assert_equal 1, products(:teddy_bear).reload.stock
+  end
+
+  test "expire_unpaid leaves an order alone for its first 30 minutes" do
+    order = place
+
+    travel 29.minutes do
+      @service.expire_unpaid
+      assert_equal "pending_payment", order.reload.status
+      assert_equal 18, products(:chocolate_box).reload.stock
+    end
+
+    travel 31.minutes do
+      @service.expire_unpaid
+      assert_equal "expired", order.reload.status
+      assert_equal 20, products(:chocolate_box).reload.stock
+      assert_equal 6, products(:gift_set).reload.stock
+    end
+  end
+
+  test "expire_unpaid never touches paid or already finished orders" do
+    paid = %i[ layla_delivered layla_preparing omar_on_the_way ].map { |name| orders(name) }
+    paid.first.update!(status: "cancelled")
+
+    assert_no_difference -> { Product.where.not(slug: "cuddly-teddy-bear-classic").sum(:stock) } do
+      @service.expire_unpaid
+    end
+
+    assert_equal %w[ cancelled preparing on_the_way ], paid.map { |order| order.reload.status }
+  end
+
+  test "expire_unpaid returns stock only once when run again" do
+    2.times { @service.expire_unpaid }
+
+    assert_equal 1, products(:teddy_bear).reload.stock
+  end
+
+  test "expire_unpaid skips an order that was paid just before it could be locked" do
+    with_paid_before_lock(orders(:layla_pending_payment)) do
+      @service.expire_unpaid
+    end
+
+    assert_equal "preparing", orders(:layla_pending_payment).reload.status
+    assert_equal 0, products(:teddy_bear).reload.stock
+  end
+
+  test "expire_unpaid still expires an order whose product was deleted" do
+    products(:teddy_bear).delete
+
+    @service.expire_unpaid
+
+    assert_equal "expired", orders(:layla_pending_payment).reload.status
+    assert_nil order_items(:layla_pending_payment_teddy_bear).reload.product_id
+  end
+
   private
     def place(items: ITEMS, expected_total: "73", details: {})
       @service.place(users(:omar), items: items, expected_total: expected_total, details: {
@@ -230,6 +291,18 @@ class OrderServiceTest < ActiveSupport::TestCase
       yield
     ensure
       SecureRandom.singleton_class.remove_method(:random_number)
+    end
+
+    # Marks the order paid after the expiry query has picked it up, as a payment confirmation arriving at that moment would.
+    def with_paid_before_lock(order)
+      original = Order.instance_method(:with_lock)
+      Order.define_method(:with_lock) do |*args, &block|
+        Order.where(id: order.id).update_all(status: "preparing")
+        original.bind_call(self, *args, &block)
+      end
+      yield
+    ensure
+      Order.define_method(:with_lock, original)
     end
 
     def with_sold_out_after_cart_check(slug)

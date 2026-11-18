@@ -1,6 +1,7 @@
 class OrderService
   MAX_DAYS_AHEAD = 30
   MAX_TOTAL = BigDecimal("5000")
+  PAYMENT_WINDOW = 30.minutes
 
   class CartChanged < StandardError; end
 
@@ -21,6 +22,19 @@ class OrderService
       order.save!
     end
     order
+  end
+
+  def expire_unpaid
+    Order.where(status: "pending_payment", created_at: ...PAYMENT_WINDOW.ago).find_each do |order|
+      order.with_lock do
+        next unless order.status == "pending_payment"
+
+        order.order_items.each do |item|
+          Product.where(id: item.product_id).update_all([ "stock = stock + ?", item.quantity ])
+        end
+        order.update!(status: "expired")
+      end
+    end
   end
 
   private

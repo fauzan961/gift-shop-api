@@ -1,5 +1,5 @@
 class Order < ApplicationRecord
-  STATUSES = %w[ pending_payment preparing on_the_way delivered cancelled ].freeze
+  STATUSES = %w[ pending_payment preparing on_the_way delivered cancelled expired].freeze
   DELIVERY_SLOTS = %w[ 09-12 12-15 15-18 18-21 ].freeze
   PAYMENT_METHODS = %w[ mpgs knet apple_pay ].freeze
 
