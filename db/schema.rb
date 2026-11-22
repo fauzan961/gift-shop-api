@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_122812) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_125543) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -184,6 +184,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_122812) do
     t.check_constraint "stock >= 0", name: "products_stock_not_negative"
   end
 
+  create_table "reviews", force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.bigint "user_id", null: false
+    t.integer "rating", null: false
+    t.string "comment", limit: 1000
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "user_id"], name: "index_reviews_on_product_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_reviews_on_user_id"
+    t.check_constraint "rating >= 1 AND rating <= 5", name: "reviews_rating_allowed"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "token_digest", limit: 64, null: false
@@ -224,5 +236,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_122812) do
   add_foreign_key "product_images", "products", on_delete: :cascade
   add_foreign_key "product_occasions", "occasions"
   add_foreign_key "product_occasions", "products", on_delete: :cascade
+  add_foreign_key "reviews", "products", on_delete: :cascade
+  add_foreign_key "reviews", "users", on_delete: :cascade
   add_foreign_key "sessions", "users", on_delete: :cascade
 end

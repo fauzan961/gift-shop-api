@@ -1,0 +1,13 @@
+# Layla received both products in her delivered order, so she is allowed to review them.
+layla_gift_set:
+  user: layla
+  product: gift_set
+  rating: 5
+  comment: Delivered on time for our anniversary. The box looks beautiful.
+  created_at: <%= 5.days.ago %>
+
+layla_chocolate_box:
+  user: layla
+  product: chocolate_box
+  rating: 4
+  created_at: <%= 3.days.ago %>

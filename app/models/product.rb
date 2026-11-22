@@ -12,6 +12,7 @@ class Product < ApplicationRecord
   has_many :product_images, -> { order(:position, :id) }, inverse_of: :product
   has_many :product_occasions, inverse_of: :product
   has_many :occasions, through: :product_occasions
+  has_many :reviews
 
   normalizes :name_en, :name_ar, :description_en, :description_ar, with: ->(value) { value.strip.presence }
   normalizes :slug, with: ->(value) { value.strip.downcase }

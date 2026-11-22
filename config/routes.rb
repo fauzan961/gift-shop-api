@@ -13,6 +13,8 @@ Rails.application.routes.draw do
     resources :occasions, only: :index
     resources :products, only: [ :index, :show ], param: :slug do
       get :related, on: :member
+      resources :reviews, only: :index
+      resource :review, only: [ :show, :create, :update, :destroy ]
     end
 
     post "auth/code", to: "auth_codes#create", as: :auth_code

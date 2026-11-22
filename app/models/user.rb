@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_many :addresses
   has_many :favorites
   has_many :orders
+  has_many :reviews
 
   normalizes :mobile, with: ->(value) { value.gsub(/[\s-]/, "") }
   normalizes :full_name, with: ->(value) { value.squish.presence }
