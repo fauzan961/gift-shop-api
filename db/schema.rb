@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_125543) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_114528) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_125543) do
     t.index ["name_en"], name: "index_categories_on_name_en", unique: true
     t.index ["slug"], name: "index_categories_on_slug", unique: true
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "categories_slug_format"
+  end
+
+  create_table "discounts", force: :cascade do |t|
+    t.string "name", limit: 100, null: false
+    t.string "discount_type", limit: 10, null: false
+    t.decimal "value", precision: 10, scale: 3, null: false
+    t.string "applies_to", limit: 10, null: false
+    t.bigint "category_id"
+    t.bigint "occasion_id"
+    t.bigint "product_id"
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at"
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active", "starts_at", "ends_at"], name: "index_discounts_on_active_and_starts_at_and_ends_at"
+    t.index ["category_id"], name: "index_discounts_on_category_id"
+    t.index ["occasion_id"], name: "index_discounts_on_occasion_id"
+    t.index ["product_id"], name: "index_discounts_on_product_id"
+    t.check_constraint "applies_to::text = ANY (ARRAY['all'::character varying, 'category'::character varying, 'occasion'::character varying, 'product'::character varying]::text[])", name: "discounts_applies_to_allowed"
+    t.check_constraint "discount_type::text = 'percentage'::text AND value >= 1::numeric AND value <= 100::numeric OR discount_type::text = 'amount'::text AND value > 0::numeric", name: "discounts_value_allowed"
+    t.check_constraint "discount_type::text = ANY (ARRAY['percentage'::character varying, 'amount'::character varying]::text[])", name: "discounts_type_allowed"
+    t.check_constraint "ends_at IS NULL OR ends_at > starts_at", name: "discounts_ends_after_start"
   end
 
   create_table "favorites", force: :cascade do |t|
@@ -175,11 +198,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_125543) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "sale_price", precision: 10, scale: 3, null: false
+    t.integer "discount_percent", default: 0, null: false
     t.index ["slug"], name: "index_products_on_slug", unique: true
+    t.check_constraint "discount_percent >= 0 AND discount_percent <= 100", name: "products_discount_percent_range"
     t.check_constraint "gender::text = ANY (ARRAY['men'::character varying, 'women'::character varying, 'unisex'::character varying]::text[])", name: "products_gender_allowed"
     t.check_constraint "price > 0::numeric", name: "products_price_positive"
     t.check_constraint "rating_average >= 0::numeric AND rating_average <= 5::numeric", name: "products_rating_average_range"
     t.check_constraint "reviews_count >= 0", name: "products_reviews_count_not_negative"
+    t.check_constraint "sale_price > 0::numeric AND sale_price <= price", name: "products_sale_price_range"
     t.check_constraint "slug::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text", name: "products_slug_format"
     t.check_constraint "stock >= 0", name: "products_stock_not_negative"
   end
@@ -226,6 +253,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_125543) do
   end
 
   add_foreign_key "addresses", "users", on_delete: :cascade
+  add_foreign_key "discounts", "categories", on_delete: :cascade
+  add_foreign_key "discounts", "occasions", on_delete: :cascade
+  add_foreign_key "discounts", "products", on_delete: :cascade
   add_foreign_key "favorites", "products", on_delete: :cascade
   add_foreign_key "favorites", "users", on_delete: :cascade
   add_foreign_key "order_items", "orders", on_delete: :cascade

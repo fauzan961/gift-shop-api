@@ -1,0 +1,46 @@
+# Running now, for every product.
+eid_sale:
+  name: Eid Sale
+  discount_type: percentage
+  value: 10
+  applies_to: all
+  starts_at: <%= 1.day.ago %>
+  ends_at: <%= 7.days.from_now %>
+
+# Running now with no end date, a fixed amount off one category.
+cakes_week:
+  name: Cakes Week
+  discount_type: amount
+  value: 2.500
+  applies_to: category
+  category: cakes
+  starts_at: <%= 2.days.ago %>
+
+# Not started yet.
+valentines:
+  name: Valentine's Day
+  discount_type: percentage
+  value: 15
+  applies_to: occasion
+  occasion: valentines_day
+  starts_at: <%= 30.days.from_now %>
+  ends_at: <%= 37.days.from_now %>
+
+# Already over.
+gift_set_deal:
+  name: Gift Set Deal
+  discount_type: percentage
+  value: 30
+  applies_to: product
+  product: gift_set
+  starts_at: <%= 10.days.ago %>
+  ends_at: <%= 1.day.ago %>
+
+# Dates say running, but an admin switched it off.
+switched_off:
+  name: Flash Sale
+  discount_type: percentage
+  value: 50
+  applies_to: all
+  starts_at: <%= 1.day.ago %>
+  active: false

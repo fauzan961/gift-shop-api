@@ -11,7 +11,7 @@ class CartsController < ApplicationController
           {
             product: product_serializer.serialize(line[:product]),
             quantity: line[:quantity],
-            lineTotal: (line[:product].price * line[:quantity]).to_f
+            lineTotal: (line[:product].sale_price * line[:quantity]).to_f
           }
         end,
         unavailable: cart[:unavailable],

@@ -42,6 +42,16 @@ class OrderServiceTest < ActiveSupport::TestCase
     assert_equal 5, products(:gift_set).reload.stock
   end
 
+  test "place charges and records the sale price of a discounted product" do
+    DiscountService.new.refresh
+
+    order = place(items: [ { slug: CHOCOLATE, quantity: 2 } ], expected_total: "22")
+
+    item = order.order_items.sole
+    assert_equal [ BigDecimal("10"), BigDecimal("20") ], [ item.unit_price, item.line_total ]
+    assert_equal [ BigDecimal("20"), BigDecimal("2"), BigDecimal("22") ], [ order.subtotal, order.delivery_fee, order.total ]
+  end
+
   test "place charges delivery below 25 KWD" do
     order = place(items: [ { slug: CHOCOLATE, quantity: 1 } ], expected_total: "14.5")
 

@@ -13,7 +13,7 @@ class CartService
       { product: product, quantity: quantity.clamp(1, [ product.stock, MAX_QUANTITY ].min) } if product&.in_stock?
     end
 
-    subtotal = lines.sum(BigDecimal("0")) { |line| line[:product].price * line[:quantity] }
+    subtotal = lines.sum(BigDecimal("0")) { |line| line[:product].sale_price * line[:quantity] }
     delivery_fee = lines.empty? || subtotal >= FREE_DELIVERY_FROM ? BigDecimal("0") : DELIVERY_FEE
 
     {

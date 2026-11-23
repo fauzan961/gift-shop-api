@@ -60,7 +60,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index leaves inactive products out of the count and lowest price" do
-    products(:hidden_product).update_column(:price, 1)
+    products(:hidden_product).update_columns(price: 1, sale_price: 1)
 
     get categories_url
 

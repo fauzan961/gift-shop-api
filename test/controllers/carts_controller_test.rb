@@ -27,6 +27,16 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  test "check charges the sale price of a discounted product" do
+    DiscountService.new.refresh
+
+    post cart_check_url, as: :json, params: { items: [ { slug: CHOCOLATE, quantity: 2 } ] }
+
+    data = response.parsed_body["data"]
+    assert_equal [ 12.5, 10.0, 20.0 ], [ data.dig("items", 0, "product", "price"), data.dig("items", 0, "product", "salePrice"), data.dig("items", 0, "lineTotal") ]
+    assert_equal [ 20.0, 2.0, 22.0 ], data.values_at("subtotal", "deliveryFee", "total")
+  end
+
   test "check charges delivery below 25 KWD" do
     post cart_check_url, as: :json, params: { items: [ { slug: CHOCOLATE, quantity: 1 } ] }
 

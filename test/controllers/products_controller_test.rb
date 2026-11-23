@@ -26,6 +26,8 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
         "nameAr" => "طقم هدايا للأبد لك",
         "category" => { "slug" => "flowers", "nameEn" => "Flowers", "nameAr" => "زهور" },
         "price" => 48.0,
+        "salePrice" => 48.0,
+        "discountPercent" => 0,
         "ratingAverage" => 4.6,
         "reviewsCount" => 8,
         "image" => "/assets/images/pendant.webp",
@@ -173,7 +175,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index breaks price ties by newest id first" do
-    products(:chocolate_box).update_column(:price, products(:teddy_bear).price)
+    products(:chocolate_box).update_columns(price: products(:teddy_bear).price, sale_price: products(:teddy_bear).price)
     tied = [ products(:teddy_bear), products(:chocolate_box) ].sort_by(&:id).reverse.map(&:slug)
 
     get products_url, params: { sort: "price-asc" }
@@ -182,7 +184,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index keeps the same order for tied products on every request" do
-    Product.update_all(price: 10)
+    Product.update_all(price: 10, sale_price: 10)
 
     get products_url, params: { sort: "price-asc" }
     first_order = slugs
@@ -520,6 +522,14 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "data" ], response.parsed_body.keys
   end
 
+  test "show returns the sale price, the original price and the discount" do
+    DiscountService.new.refresh
+
+    get product_url("belgian-chocolate-box")
+
+    assert_equal [ 12.5, 10.0, 20 ], response.parsed_body["data"].values_at("price", "salePrice", "discountPercent")
+  end
+
   test "show returns every details field for a product" do
     get product_url("forever-yours-gift-set")
 
@@ -530,6 +540,8 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
         "nameAr" => "طقم هدايا للأبد لك",
         "category" => { "slug" => "flowers", "nameEn" => "Flowers", "nameAr" => "زهور" },
         "price" => 48.0,
+        "salePrice" => 48.0,
+        "discountPercent" => 0,
         "ratingAverage" => 4.6,
         "reviewsCount" => 8,
         "image" => "/assets/images/pendant.webp",

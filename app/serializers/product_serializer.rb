@@ -12,6 +12,8 @@ class ProductSerializer
       nameAr: product.name_ar,
       category: category && { slug: category.slug, nameEn: category.name_en, nameAr: category.name_ar },
       price: product.price.to_f,
+      salePrice: product.sale_price.to_f,
+      discountPercent: product.discount_percent,
       ratingAverage: product.rating_average.to_f,
       reviewsCount: product.reviews_count,
       image: product.cover_image&.image,

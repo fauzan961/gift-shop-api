@@ -17,6 +17,8 @@ class Product < ApplicationRecord
   normalizes :name_en, :name_ar, :description_en, :description_ar, with: ->(value) { value.strip.presence }
   normalizes :slug, with: ->(value) { value.strip.downcase }
 
+  before_save { self.sale_price = price if sale_price.nil? || discount_percent.zero? }
+
   validates :name_en, presence: true, length: { maximum: 100 }
   validates :name_ar, length: { maximum: 100 }
   validates :slug, presence: true, uniqueness: true, length: { maximum: 120 },
