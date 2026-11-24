@@ -59,6 +59,15 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 9.0, cakes["fromPrice"]
   end
 
+  test "index shows the lowest sale price as the from price" do
+    # Running fixture discounts bring the teddy bear from 9.000 down to 6.500.
+    DiscountService.new.refresh
+
+    get categories_url
+
+    assert_equal 6.5, category_json("cakes")["fromPrice"]
+  end
+
   test "index leaves inactive products out of the count and lowest price" do
     products(:hidden_product).update_columns(price: 1, sale_price: 1)
 

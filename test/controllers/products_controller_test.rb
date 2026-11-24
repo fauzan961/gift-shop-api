@@ -163,6 +163,18 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "price-desc", response.parsed_body.dig("meta", "sort")
   end
 
+  test "index sorts by the sale price, not the original price" do
+    # Running fixture discounts plus 80% off the gift set: teddy bear 6.500, gift set 9.600, chocolate box 10.000.
+    Discount.create!(name: "Deal", discount_type: "percentage", value: 80, applies_to: "product", product: products(:gift_set), starts_at: 1.hour.ago)
+    DiscountService.new.refresh
+
+    get products_url, params: { sort: "price-asc" }
+    assert_equal %w[ cuddly-teddy-bear-classic forever-yours-gift-set belgian-chocolate-box ], slugs
+
+    get products_url, params: { sort: "price-desc" }
+    assert_equal %w[ belgian-chocolate-box forever-yours-gift-set cuddly-teddy-bear-classic ], slugs
+  end
+
   test "index sorts by rating, with more reviews winning a tie" do
     products(:gift_set).update_columns(rating_average: 4.6, reviews_count: 8)
     products(:teddy_bear).update_columns(rating_average: 4.8, reviews_count: 3)
@@ -501,6 +513,87 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_nil response.parsed_body.dig("meta", "filters", "gender")
     assert_equal [], response.parsed_body.dig("meta", "filters", "ageGroups")
+  end
+
+  # ---------- Price filter ----------
+  # Active products: teddy bear 9.000, chocolate box 12.500, gift set 48.000.
+
+  test "index filters by one price band" do
+    get products_url, params: { prices: "5-10" }
+
+    assert_equal %w[ cuddly-teddy-bear-classic ], slugs
+  end
+
+  test "index filters by several price bands" do
+    get products_url, params: { prices: "5-10,10-20" }
+
+    assert_equal %w[ belgian-chocolate-box cuddly-teddy-bear-classic ], slugs.sort
+  end
+
+  test "index filters by the open-ended top band" do
+    get products_url, params: { prices: "20-plus" }
+
+    assert_equal %w[ forever-yours-gift-set ], slugs
+  end
+
+  test "index puts a price on a band edge only in the higher band" do
+    products(:chocolate_box).update!(price: 10)
+
+    get products_url, params: { prices: "5-10" }
+    assert_not_includes slugs, "belgian-chocolate-box"
+
+    get products_url, params: { prices: "10-20" }
+    assert_includes slugs, "belgian-chocolate-box"
+  end
+
+  test "index filters by the sale price, not the original price" do
+    # 80% off moves the gift set from 48.000 (20 and above) to 9.600 (5 to 10).
+    Discount.create!(name: "Deal", discount_type: "percentage", value: 80, applies_to: "product", product: products(:gift_set), starts_at: 1.hour.ago)
+    DiscountService.new.refresh
+
+    get products_url, params: { prices: "5-10" }
+    assert_includes slugs, "forever-yours-gift-set"
+
+    get products_url, params: { prices: "20-plus" }
+    assert_not_includes slugs, "forever-yours-gift-set"
+  end
+
+  test "index accepts price bands as a list" do
+    get products_url, params: { prices: [ "5-10", "10-20" ] }
+
+    assert_equal %w[ belgian-chocolate-box cuddly-teddy-bear-classic ], slugs.sort
+  end
+
+  test "index matches nothing for an unknown price band" do
+    [ "abc", "7-9", "20+" ].each do |value|
+      get products_url, params: { prices: value }
+
+      assert_equal [], slugs, "prices=#{value.inspect}"
+    end
+  end
+
+  test "index ignores unknown price bands mixed with known ones" do
+    get products_url, params: { prices: "abc,20-plus" }
+
+    assert_equal %w[ forever-yours-gift-set ], slugs
+  end
+
+  test "index combines the price filter with other filters" do
+    get products_url, params: { categories: "cakes", prices: "10-20" }
+
+    assert_equal %w[ belgian-chocolate-box ], slugs
+  end
+
+  test "index reports the selected price bands in meta" do
+    get products_url, params: { prices: " 5-10 , 20-PLUS " }
+
+    assert_equal %w[ 5-10 20-plus ], response.parsed_body.dig("meta", "filters", "prices")
+  end
+
+  test "index reports no price bands when none are selected" do
+    get products_url
+
+    assert_equal [], response.parsed_body.dig("meta", "filters", "prices")
   end
 
   # ---------- All filters together ----------

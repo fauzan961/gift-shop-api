@@ -5,8 +5,8 @@ class ProductsController < ApplicationController
   DEFAULT_SORT = "latest"
   SORTS = {
     "latest"     => { created_at: :desc, id: :desc },
-    "price-asc"  => { price: :asc, id: :desc },
-    "price-desc" => { price: :desc, id: :desc },
+    "price-asc"  => { sale_price: :asc, id: :desc },
+    "price-desc" => { sale_price: :desc, id: :desc },
     "rating"     => { rating_average: :desc, reviews_count: :desc, id: :desc }
   }.freeze
   GENDER_FILTERS = {
@@ -15,6 +15,7 @@ class ProductsController < ApplicationController
     "unisex" => %w[ unisex ]
   }.freeze
   AGE_GROUP_PARAMS = { "0-6" => "0-6", "6-18" => "6-18", "18-plus" => "18+" }.freeze
+  PRICE_RANGES = { "0-5" => 0...5, "5-10" => 5...10, "10-20" => 10...20, "20-plus" => 20.. }.freeze
 
   allow_unauthenticated_access
 
@@ -24,6 +25,7 @@ class ProductsController < ApplicationController
     scope = filter_by_occasions(scope)
     scope = filter_by_gender(scope)
     scope = filter_by_age_groups(scope)
+    scope = filter_by_prices(scope)
     total_count = scope.count
 
     products = scope.includes(:primary_category, :product_images)
@@ -43,7 +45,8 @@ class ProductsController < ApplicationController
           categories: category_slugs,
           occasions: occasion_slugs,
           gender: gender,
-          ageGroups: age_group_values
+          ageGroups: age_group_values,
+          prices: price_values
         }
       }
     }
@@ -117,6 +120,16 @@ class ProductsController < ApplicationController
 
     def age_group_values
       @age_group_values ||= list_param(:ageGroups)
+    end
+
+    def filter_by_prices(scope)
+      return scope if price_values.empty?
+
+      scope.where(sale_price: PRICE_RANGES.values_at(*price_values).compact)
+    end
+
+    def price_values
+      @price_values ||= list_param(:prices)
     end
 
     def list_param(name)
