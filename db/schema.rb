@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_114528) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_122621) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -122,9 +122,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_114528) do
     t.decimal "line_total", precision: 10, scale: 3, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "original_price", precision: 10, scale: 3, null: false
+    t.decimal "discount_amount", precision: 10, scale: 3, default: "0.0", null: false
     t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id", unique: true
     t.index ["product_id"], name: "index_order_items_on_product_id"
+    t.check_constraint "discount_amount >= 0::numeric", name: "order_items_discount_amount_not_negative"
     t.check_constraint "line_total = (unit_price * quantity::numeric)", name: "order_items_line_total_adds_up"
+    t.check_constraint "original_price = (unit_price + discount_amount)", name: "order_items_original_price_adds_up"
     t.check_constraint "quantity >= 1 AND quantity <= 99", name: "order_items_quantity_allowed"
     t.check_constraint "unit_price > 0::numeric", name: "order_items_unit_price_positive"
   end

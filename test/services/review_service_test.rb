@@ -146,7 +146,8 @@ class ReviewServiceTest < ActiveSupport::TestCase
         block_area: "Block 1", city: "Kuwait City", delivery_date: Date.current, delivery_slot: "09-12",
         payment_method: "knet", subtotal: product.price, delivery_fee: 0, total: product.price
       )
-      order.order_items.create!(product: product, product_name_en: product.name_en, unit_price: product.price, quantity: 1, line_total: product.price)
+      order.order_items.create!(product: product, product_name_en: product.name_en, unit_price: product.price, original_price: product.price,
+                                quantity: 1, line_total: product.price)
       user
     end
 

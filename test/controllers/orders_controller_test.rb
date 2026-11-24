@@ -147,7 +147,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
   test "index takes the same number of queries however many orders there are" do
     order = orders(:layla_preparing).dup.tap { |copy| copy.update!(number: "26111700001", subtotal: 9, delivery_fee: 2, total: 11) }
-    order.order_items.create!(product: products(:teddy_bear), product_name_en: "Cuddly Teddy Bear Classic", unit_price: 9, quantity: 1, line_total: 9)
+    order.order_items.create!(product: products(:teddy_bear), product_name_en: "Cuddly Teddy Bear Classic", unit_price: 9, original_price: 9, quantity: 1, line_total: 9)
     token = SessionService.new.start(users(:layla))
 
     assert_queries_count(8) { get orders_url, headers: bearer(token) }
@@ -185,6 +185,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
             "category" => { "slug" => "cakes", "nameEn" => "Cakes", "nameAr" => nil },
             "image" => nil,
             "unitPrice" => 12.5,
+            "originalPrice" => 12.5,
+            "discountAmount" => 0.0,
             "quantity" => 1,
             "lineTotal" => 12.5
           }
@@ -192,6 +194,24 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
       },
       response.parsed_body["data"]
     )
+  end
+
+  test "show keeps the discount an order was placed with, even after the sale ends" do
+    # Cakes Week takes 2.500 off the chocolate box: 12.500 becomes 10.000.
+    DiscountService.new.refresh
+    post orders_url, headers: bearer("layla-phone-token"), as: :json,
+         params: order_params(items: [ { slug: "belgian-chocolate-box", quantity: 2 } ], expected_total: 22)
+    number = response.parsed_body.dig("data", "number")
+
+    discounts(:cakes_week).update!(active: false)
+    discounts(:eid_sale).update!(active: false)
+    DiscountService.new.refresh
+
+    get order_url(number), headers: bearer("layla-phone-token")
+
+    item = response.parsed_body.dig("data", "items", 0)
+    assert_equal [ 12.5, 10.0, 2.5, 2, 20.0 ], item.values_at("originalPrice", "unitPrice", "discountAmount", "quantity", "lineTotal")
+    assert_equal BigDecimal("12.5"), products(:chocolate_box).reload.sale_price
   end
 
   test "show includes an expired order, so Angular can explain the payment timed out" do

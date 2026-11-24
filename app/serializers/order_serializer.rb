@@ -25,6 +25,8 @@ class OrderSerializer
           category: category && { slug: category.slug, nameEn: category.name_en, nameAr: category.name_ar },
           image: item.product&.cover_image&.image,
           unitPrice: item.unit_price.to_f,
+          originalPrice: item.original_price.to_f,
+          discountAmount: item.discount_amount.to_f,
           quantity: item.quantity,
           lineTotal: item.line_total.to_f
         }

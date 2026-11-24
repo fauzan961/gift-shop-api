@@ -96,7 +96,7 @@ class OrderItemTest < ActiveSupport::TestCase
     def build_item(**attributes)
       OrderItem.new({
         order: orders(:omar_on_the_way), product: products(:teddy_bear), product_name_en: "Cuddly Teddy Bear Classic",
-        unit_price: BigDecimal("12.5"), quantity: 3, line_total: BigDecimal("37.5")
+        unit_price: BigDecimal("12.5"), original_price: BigDecimal("12.5"), quantity: 3, line_total: BigDecimal("37.5")
       }.merge(attributes))
     end
 

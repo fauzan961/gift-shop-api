@@ -46,7 +46,8 @@ class OrderService
         product = line[:product]
         order.order_items.build(
           product: product, product_name_en: product.name_en, product_name_ar: product.name_ar,
-          unit_price: product.sale_price, quantity: line[:quantity], line_total: product.sale_price * line[:quantity]
+          unit_price: product.sale_price, original_price: product.price, discount_amount: product.price - product.sale_price,
+          quantity: line[:quantity], line_total: product.sale_price * line[:quantity]
         )
       end
       order

@@ -596,6 +596,91 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], response.parsed_body.dig("meta", "filters", "prices")
   end
 
+  # ---------- Discount filter ----------
+  # After DiscountService.refresh with the running fixture discounts:
+  # chocolate box 20% off, teddy bear 28% off, gift set 10% off.
+
+  test "index filters by one discount band" do
+    DiscountService.new.refresh
+
+    get products_url, params: { discounts: "1-25" }
+    assert_equal %w[ belgian-chocolate-box forever-yours-gift-set ], slugs.sort
+
+    get products_url, params: { discounts: "25-50" }
+    assert_equal %w[ cuddly-teddy-bear-classic ], slugs
+  end
+
+  test "index filters by several discount bands" do
+    DiscountService.new.refresh
+
+    get products_url, params: { discounts: "1-25,25-50" }
+
+    assert_equal %w[ belgian-chocolate-box cuddly-teddy-bear-classic forever-yours-gift-set ], slugs.sort
+  end
+
+  test "index filters by the open-ended top discount band" do
+    Discount.create!(name: "Deal", discount_type: "percentage", value: 80, applies_to: "product", product: products(:gift_set), starts_at: 1.hour.ago)
+    DiscountService.new.refresh
+
+    get products_url, params: { discounts: "50-plus" }
+
+    assert_equal %w[ forever-yours-gift-set ], slugs
+  end
+
+  test "index leaves products without a discount out of every discount band" do
+    get products_url, params: { discounts: "1-25,25-50,50-plus" }
+
+    assert_equal [], slugs
+  end
+
+  test "index puts a discount on a band edge only in the higher band" do
+    products(:chocolate_box).update_columns(sale_price: BigDecimal("9.375"), discount_percent: 25)
+
+    get products_url, params: { discounts: "1-25" }
+    assert_not_includes slugs, "belgian-chocolate-box"
+
+    get products_url, params: { discounts: "25-50" }
+    assert_includes slugs, "belgian-chocolate-box"
+  end
+
+  test "index matches nothing for an unknown discount band" do
+    DiscountService.new.refresh
+
+    [ "0-25", "abc", "50+" ].each do |value|
+      get products_url, params: { discounts: value }
+
+      assert_equal [], slugs, "discounts=#{value.inspect}"
+    end
+  end
+
+  test "index ignores unknown discount bands mixed with known ones" do
+    DiscountService.new.refresh
+
+    get products_url, params: { discounts: "abc,25-50" }
+
+    assert_equal %w[ cuddly-teddy-bear-classic ], slugs
+  end
+
+  test "index combines the discount filter with the price filter" do
+    DiscountService.new.refresh
+
+    get products_url, params: { discounts: "1-25", prices: "10-20" }
+
+    assert_equal %w[ belgian-chocolate-box ], slugs
+  end
+
+  test "index reports the selected discount bands in meta" do
+    get products_url, params: { discounts: " 25-50 , 50-PLUS " }
+
+    assert_equal %w[ 25-50 50-plus ], response.parsed_body.dig("meta", "filters", "discounts")
+  end
+
+  test "index reports no discount bands when none are selected" do
+    get products_url
+
+    assert_equal [], response.parsed_body.dig("meta", "filters", "discounts")
+  end
+
   # ---------- All filters together ----------
 
   test "index combines category, occasion, gender and age group filters" do
