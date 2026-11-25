@@ -40,5 +40,12 @@ module GiftShopApi
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # The admin pages are server-rendered HTML with a signed-in session, so they need
+    # the cookie, session, flash and form-method middleware that API mode leaves out.
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: "_gift_shop_admin_session", same_site: :lax
+    config.middleware.use ActionDispatch::Flash
+    config.middleware.use Rack::MethodOverride
   end
 end

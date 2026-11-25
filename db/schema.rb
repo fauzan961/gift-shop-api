@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_122621) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_120630) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,6 +26,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_122621) do
     t.index ["user_id"], name: "index_addresses_on_user_id"
     t.index ["user_id"], name: "index_addresses_on_user_id_default", unique: true, where: "is_default"
     t.check_constraint "address_type::text = ANY (ARRAY['Home'::character varying, 'Work'::character varying, 'Other'::character varying]::text[])", name: "addresses_address_type_allowed"
+  end
+
+  create_table "admin_users", force: :cascade do |t|
+    t.string "name", limit: 100, null: false
+    t.string "email", limit: 255, null: false
+    t.string "password_digest", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((email)::text)", name: "index_admin_users_on_lower_email", unique: true
   end
 
   create_table "categories", force: :cascade do |t|
