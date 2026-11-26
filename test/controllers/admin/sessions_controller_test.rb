@@ -36,12 +36,13 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "starts a new session on sign-in" do
-    get new_admin_session_path
-    old_session_id = session.id
+    delete admin_session_path
+    old_session_id = session.id.to_s
+    assert_not_empty old_session_id
 
     sign_in
 
-    assert_not_equal old_session_id, session.id
+    assert_not_equal old_session_id, session.id.to_s
   end
 
   test "refuses a wrong password, an unknown email or a blocked admin with the same message" do
@@ -98,10 +99,11 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin pages cannot change data without signing in" do
-    assert_no_difference -> { Category.count } do
-      post admin_categories_path, params: { category: { name_en: "Balloons", slug: "balloons" } }
-      delete admin_category_path(categories(:hidden))
-    end
+    post admin_categories_path, params: { category: { name_en: "Balloons", slug: "balloons" } }
+    delete admin_category_path(categories(:hidden))
+
+    assert_not Category.exists?(slug: "balloons")
+    assert Category.exists?(categories(:hidden).id)
   end
 
   test "admin pages ignore a customer's token" do

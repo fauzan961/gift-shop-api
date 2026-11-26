@@ -259,7 +259,7 @@ class ProductTest < ActiveSupport::TestCase
   end
 
   test "lists all its categories" do
-    assert_equal %w[ cakes flowers ], products(:gift_set).categories.order(:slug).pluck(:slug)
+    assert_equal %w[ cakes flowers ], products(:gift_set).categories.pluck(:slug).sort
   end
 
   test "returns its main category" do

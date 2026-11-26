@@ -8,6 +8,8 @@ Rails.application.routes.draw do
   namespace :admin do
     resource :session, only: %i[ new create destroy ]
     resources :categories, only: %i[ index show new create edit update destroy ]
+    resources :occasions, only: %i[ index show new create edit update destroy ]
+    resources :products, only: %i[ index show new create edit update destroy ]
 
     root to: "categories#index"
   end

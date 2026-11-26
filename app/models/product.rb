@@ -4,10 +4,12 @@ class Product < ApplicationRecord
   AGE_GROUPS = %w[ 0-6 6-18 18+ ].freeze
   MAX_PRICE = 10_000
 
-  has_many :product_categories, inverse_of: :product
+  has_many :product_categories, -> { order(primary_category: :desc, id: :asc) }, inverse_of: :product, autosave: true
   has_many :categories, through: :product_categories
   has_one :primary_product_category, -> { where(primary_category: true) }, class_name: "ProductCategory"
   has_one :primary_category, through: :primary_product_category, source: :category
+  has_many :extra_product_categories, -> { where(primary_category: false) }, class_name: "ProductCategory"
+  has_many :extra_categories, through: :extra_product_categories, source: :category
 
   has_many :product_images, -> { order(:position, :id) }, inverse_of: :product
   has_many :product_occasions, inverse_of: :product
@@ -17,6 +19,9 @@ class Product < ApplicationRecord
   normalizes :name_en, :name_ar, :description_en, :description_ar, with: ->(value) { value.strip.presence }
   normalizes :slug, with: ->(value) { value.strip.downcase }
 
+  attr_writer :primary_category_id, :extra_category_ids
+
+  before_validation :assign_categories, if: -> { defined?(@primary_category_id) || defined?(@extra_category_ids) }
   before_save { self.sale_price = price if sale_price.nil? || discount_percent.zero? }
 
   validates :name_en, presence: true, length: { maximum: 100 }
@@ -39,6 +44,18 @@ class Product < ApplicationRecord
     stock.positive?
   end
 
+  def primary_category_id
+    return @primary_category_id if defined?(@primary_category_id)
+
+    product_categories.find(&:primary_category)&.category_id
+  end
+
+  def extra_category_ids
+    return @extra_category_ids if defined?(@extra_category_ids)
+
+    product_categories.reject(&:primary_category).map(&:category_id)
+  end
+
   def cover_image
     product_images.first
   end
@@ -59,6 +76,21 @@ class Product < ApplicationRecord
   end
 
   private
+    def assign_categories
+      primary_id = primary_category_id.presence&.to_i
+      wanted = (Array(extra_category_ids).compact_blank.map(&:to_i).uniq - [ primary_id ]).index_with(false)
+      wanted[primary_id] = true if primary_id
+
+      product_categories.each do |link|
+        if wanted.key?(link.category_id)
+          link.primary_category = wanted.delete(link.category_id)
+        else
+          link.mark_for_destruction
+        end
+      end
+      wanted.each { |category_id, primary| product_categories.build(category_id: category_id, primary_category: primary) }
+    end
+
     def shared_category_products
       Product.active.joins(:categories).where(categories: { id: category_ids, active: true }).distinct
     end
