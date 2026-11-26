@@ -14,6 +14,7 @@ class OccasionDashboard < Administrate::BaseDashboard
     featured: Field::Boolean,
     position: Field::Number,
     active: Field::Boolean,
+    products: Field::HasMany,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -21,7 +22,7 @@ class OccasionDashboard < Administrate::BaseDashboard
   COLLECTION_ATTRIBUTES = %i[ id name_en name_ar slug occurs_on featured position active ].freeze
 
   SHOW_PAGE_ATTRIBUTES = %i[
-    id name_en name_ar slug emoji tagline_en tagline_ar image occurs_on featured position active created_at updated_at
+    id name_en name_ar slug emoji tagline_en tagline_ar image occurs_on featured position active products created_at updated_at
   ].freeze
 
   FORM_ATTRIBUTES = %i[ name_en name_ar slug emoji tagline_en tagline_ar image occurs_on featured position active ].freeze

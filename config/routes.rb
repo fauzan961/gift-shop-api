@@ -10,6 +10,8 @@ Rails.application.routes.draw do
     resources :categories, only: %i[ index show new create edit update destroy ]
     resources :occasions, only: %i[ index show new create edit update destroy ]
     resources :products, only: %i[ index show new create edit update destroy ]
+    resources :product_images, only: %i[ index show new create edit update destroy ]
+    resources :discounts, only: %i[ index show new create edit update destroy ]
 
     root to: "categories#index"
   end

@@ -21,6 +21,7 @@ class ProductDashboard < Administrate::BaseDashboard
     primary_category_id: Field::Select.with_options(collection: -> { Category.ordered.pluck(:name_en, :id) }),
     extra_categories: Field::HasMany.with_options(class_name: "Category"),
     occasions: Field::HasMany,
+    product_images: Field::HasMany,
     created_at: Field::DateTime,
     updated_at: Field::DateTime
   }.freeze
@@ -29,7 +30,7 @@ class ProductDashboard < Administrate::BaseDashboard
 
   SHOW_PAGE_ATTRIBUTES = %i[
     id name_en name_ar slug description_en description_ar price sale_price discount_percent
-    gender age_group stock rating_average reviews_count active categories occasions created_at updated_at
+    gender age_group stock rating_average reviews_count active categories occasions product_images created_at updated_at
   ].freeze
 
   FORM_ATTRIBUTES = %i[
